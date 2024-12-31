@@ -1,0 +1,21 @@
+# == Schema Information
+#
+# Table name: options
+#
+#  id         :bigint           not null, primary key
+#  active     :boolean
+#  count      :integer
+#  name       :string
+#  created_at :datetime         not null
+#  updated_at :datetime         not null
+#
+
+one:
+  name: MyString
+  count: 1
+  active: false
+
+two:
+  name: MyString
+  count: 1
+  active: false

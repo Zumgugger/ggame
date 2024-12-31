@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 ActiveAdmin.register_page "Dashboard" do
   menu priority: 1, label: proc { I18n.t("active_admin.dashboard") }
 
@@ -10,6 +11,13 @@ ActiveAdmin.register_page "Dashboard" do
       end
     end
 
+    panel "File Upload" do
+      link_to "Go to Upload Page", ggame_uploads_path
+    end
+
+    panel "Resets" do
+      link_to "Go to Resets Page", ggame_resets_path
+    end
     # Here is an example of a simple dashboard with columns and panels.
     #
     # columns do

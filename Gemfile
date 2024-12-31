@@ -57,6 +57,14 @@ gem "kaminari-activerecord", "~> 1.2.2"
 gem "kaminari-core", "~> 1.2.2"
 gem "sassc"
 
+# added by me for uploading spreadsheets to the database
+gem "roo"            # For reading Excel and CSV files
+gem "activestorage"   # For uploading files
+
+# added to generate dummy data for the users database table
+gem "faker"
+
+
 
 
 
@@ -70,6 +78,9 @@ group :development, :test do
 
   # Omakase Ruby styling [https://github.com/rails/rubocop-rails-omakase/]
   gem "rubocop-rails-omakase", require: false
+
+  # added by me for better overview
+  gem "annotate"
 end
 
 group :development do

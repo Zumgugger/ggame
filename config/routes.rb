@@ -13,8 +13,20 @@ Rails.application.routes.draw do
   get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
 
   # Defines the root path route ("/")
-  #changed by me
+  # changed by me
   root to: "home#index" # Or any other controller/view you prefer
 
-
+  # Custom routes added by me
+  namespace :ggame do
+    resources :uploads, only: [ :index, :create ]
+    resources :resets, only: [ :index ] do
+      collection do
+        post :reset_group_points  # This is what generates reset_group_points_path
+        delete :destroy_all_users
+        delete :destroy_all_groups
+        put :reset_mines
+        put :reset_count
+      end
+    end
+  end
 end

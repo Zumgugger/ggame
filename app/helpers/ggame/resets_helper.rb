@@ -1,0 +1,2 @@
+module Ggame::ResetsHelper
+end

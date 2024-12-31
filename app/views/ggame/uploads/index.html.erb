@@ -1,0 +1,8 @@
+<h1>Upload Targets CSV</h1>
+
+<%= form_with url: ggame_uploads_path, local: true, method: :post, enctype: "multipart/form-data" do |form| %>
+  <%= form.file_field :file %>
+  <%= form.submit "Upload CSV" %>
+<% end %>
+
+

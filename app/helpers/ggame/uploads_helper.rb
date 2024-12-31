@@ -1,0 +1,2 @@
+module Ggame::UploadsHelper
+end

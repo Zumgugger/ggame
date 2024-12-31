@@ -1,0 +1,7 @@
+<!-- app/views/active_admin/targets/import_csv.html.erb -->
+<h3>Upload CSV File</h3>
+<h2>Titel in der ersten Reihe in folgender Reihenfolge: "name", "village", "description", "points", "sort_order")</h2>
+<%= form_with url: import_csv_admin_targets_path, local: true, multipart: true do |f| %>
+  <%= f.file_field :file %>
+  <%= f.submit 'Import CSV' %>
+<% end %>

@@ -1,0 +1,36 @@
+# == Schema Information
+#
+# Table name: targets
+#
+#  id          :bigint           not null, primary key
+#  count       :integer          default(0)
+#  description :string
+#  last_action :datetime
+#  mines       :integer          default(0)
+#  name        :string
+#  points      :integer          default(100)
+#  sort_order  :integer
+#  village     :string
+#  created_at  :datetime         not null
+#  updated_at  :datetime         not null
+#
+
+one:
+  name: MyString
+  description: MyString
+  points: 1
+  mines: 1
+  count: 1
+  last_action: 2024-12-29 21:56:31
+  village: MyString
+  sort_order: 1
+
+two:
+  name: MyString
+  description: MyString
+  points: 1
+  mines: 1
+  count: 1
+  last_action: 2024-12-29 21:56:31
+  village: MyString
+  sort_order: 1

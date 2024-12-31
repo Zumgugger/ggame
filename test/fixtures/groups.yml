@@ -1,0 +1,27 @@
+# == Schema Information
+#
+# Table name: groups
+#
+#  id                :bigint           not null, primary key
+#  false_information :boolean
+#  kopfgeld          :integer
+#  name              :string
+#  points            :integer
+#  sort_order        :integer
+#  created_at        :datetime         not null
+#  updated_at        :datetime         not null
+#
+
+one:
+  name: MyString
+  points: 1
+  false_information: false
+  kopfgeld: 1
+  sort_order: 1
+
+two:
+  name: MyString
+  points: 1
+  false_information: false
+  kopfgeld: 1
+  sort_order: 1
