@@ -10,17 +10,17 @@
 # Datenbank mit meist gebrauchten Dingen füllen
 
 
-Option.create([
-  { name: "hat Posten geholt", count: 0, active: true },
-  { name: "hat Mine gesetzt", count: 0, active: true },
-  { name: "hat Gruppe fotografiert", count: 0, active: true },
-  { name: "hat sondiert", count: 0, active: true },
-  { name: "hat spioniert", count: 0, active: true },
-  { name: "hat Foto bemerkt", count: 0, active: true },
-  { name: "Spionageabwehr", count: 0, active: true },
-  { name: "hat Kopfgeld gesetzt", count: 0, active: true },
-  { name: "hat Mine entschärft", count: 0, active: true }
-])
+# Option.create([
+#   { name: "hat Posten geholt", count: 0, active: true },
+#   { name: "hat Mine gesetzt", count: 0, active: true },
+#   { name: "hat Gruppe fotografiert", count: 0, active: true },
+#   { name: "hat sondiert", count: 0, active: true },
+#   { name: "hat spioniert", count: 0, active: true },
+#   { name: "hat Foto bemerkt", count: 0, active: true },
+#   { name: "Spionageabwehr", count: 0, active: true },
+#   { name: "hat Kopfgeld gesetzt", count: 0, active: true },
+#   { name: "hat Mine entschärft", count: 0, active: true }
+# ])
 
 
 
@@ -28,20 +28,20 @@ Option.create([
 if Rails.env.development?
   require 'faker'
 
-#   # Create 20 dummy users
-#   20.times do
-#     User.create!(
-#       name: Faker::Name.name,
-#       email: Faker::Internet.email,
-#       password: 'password',
-#       password_confirmation: 'password',
-#       phone_number: Faker::PhoneNumber.phone_number,
-#       group: nil # Ensures users are not assigned a group
-#     )
-#   end
-#   puts "20 dummy users created!"
-# end
+  # Create 20 dummy users
+  20.times do
+    User.create!(
+      name: Faker::Name.name,
+      email: Faker::Internet.email,
+      password: 'password',
+      password_confirmation: 'password',
+      phone_number: Faker::PhoneNumber.phone_number,
+      group: nil # Ensures users are not assigned a group
+    )
+  end
+  puts "20 dummy users created!"
+
+end
 
 
-
-AdminUser.create!(email: 'admin@example.com', password: 'password', password_confirmation: 'password') if Rails.env.development?
+# AdminUser.create!(email: 'admin@example.com', password: 'password', password_confirmation: 'password') if Rails.env.development?

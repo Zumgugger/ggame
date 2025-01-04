@@ -1,0 +1,43 @@
+<%= form_for(event) do |f| %>
+
+  <% if @event.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= pluralize(@event.errors.count, "error") %> prohibited this event from being saved:</h2>
+      <ul>
+        <% @event.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="field">
+    <%= f.label "Akteur" %>
+    <%= f.collection_select(:group_id, @groups, :id, :name) %>
+  </div>
+
+  <div class="field" id="action">
+    <%= f.label "Aktion" %>
+    <%= f.collection_select(:option_id, @options.order(name: :asc), :id, :name, {}, { id: "action" }) %>
+  </div>
+
+  <div class="field" id="minepoints" >
+    <%= f.label "Punkte investiert" %>
+    <%= f.select :points_set, (0..5000).step(50).to_a %>
+  </div>
+
+  <div class="field" id="target_group">
+    <%= f.label "Ziel" %>
+    <%= f.collection_select( :target_group_id, @groups.order(name: :asc), :id, :name, {}, { id: "target_group" })%>
+  </div>
+
+  <div class="field" id="target">
+    <%= f.label "Posten" %>
+    <%= f.collection_select( :target_id, @targets, :id, :name, {}, { id: "target" })%>
+  </div>
+
+ <div class="actions">
+   <%= f.submit "Event eintragen" %>
+  </div>
+<br />
+<% end %>

@@ -1,12 +1,13 @@
 
 ActiveAdmin.register Group do
-  permit_params :name, :description, :points, :false_information, user_ids: []
+  permit_params :name, :description, :points, :false_information, :kopfgeld, user_ids: []
 
   form do |f|
     f.inputs do
       f.input :name
       f.input :points
       f.input :false_information
+      f.input :kopfgeld
       f.input :users, as: :check_boxes, collection: User.all, label: "Assign Users to Group"
     end
     f.actions
@@ -18,6 +19,8 @@ ActiveAdmin.register Group do
     id_column
     column :name
     column :points
+    column :kopfgeld
+    column :false_information
     column "Users" do |group|
       group.users.map(&:email).join(", ")  # Display the email of users in the group
     end
@@ -29,6 +32,8 @@ ActiveAdmin.register Group do
     attributes_table do
       row :name
       row :points
+      row :kopfgeld
+      row :false_information
       row :description
     end
     panel "Users in this Group" do

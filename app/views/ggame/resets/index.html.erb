@@ -27,3 +27,8 @@
               method: :delete, 
               data: { confirm: "Are you sure you want to delete all groups? This action cannot be undone." },
               class: "btn btn-danger" %>
+
+<%= button_to "Delete All Events", destroy_all_events_ggame_resets_path, 
+              method: :delete, 
+              data: { confirm: "Are you sure you want to delete all groups? This action cannot be undone." },
+              class: "btn btn-danger" %>

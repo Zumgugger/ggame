@@ -1,0 +1,44 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <strong>Time:</strong>
+  <%= @event.time %>
+</p>
+
+<p>
+  <strong>Actor:</strong>
+  <%= @event.group.name %>
+</p>
+
+<p>
+  <strong>Option:</strong>
+  <%= @event.option.name %>
+</p>
+
+<p>
+  <strong>Bemerkt</strong>
+  <%= @event.noticed %>
+</p>
+
+<p>
+  <strong>Punkte investiert:</strong>
+  <%= @event.points_set %>
+</p>
+
+<p>
+  <strong>Ziel:</strong>
+  <%= @event.target_group&.name %>
+</p>
+
+<p>
+  <strong>Posten:</strong>
+  <%= @event.target&.name %>
+</p>
+
+<p>
+  <strong>Description:</strong>
+  <%= @event.description %>
+</p>
+
+
+<%= link_to 'Back', events_path %> 

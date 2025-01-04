@@ -28,4 +28,8 @@ class Ggame::ResetsController < ApplicationController
     Group.destroy_all
     redirect_to ggame_resets_path, notice: "All groups have been deleted successfully."
   end
+  def destroy_all_events
+    Event.destroy_all
+    redirect_to ggame_resets_path, notice: "All events have been deleted successfully"
+  end
 end

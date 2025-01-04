@@ -2,14 +2,253 @@
  * This is a manifest file that'll be compiled into application.css, which will include all the files
  * listed below.
  *
- * Any CSS (and SCSS, if configured) file within this directory, lib/assets/stylesheets, or any plugin's
- * vendor/assets/stylesheets directory can be referenced here using a relative path.
+ * Any CSS and SCSS file within this directory, lib/assets/stylesheets, vendor/assets/stylesheets,
+ * or any plugin's vendor/assets/stylesheets directory can be referenced here using a relative path.
  *
  * You're free to add application-wide styles to this file and they'll appear at the bottom of the
- * compiled file so the styles you add here take precedence over styles defined in any other CSS
+ * compiled file so the styles you add here take precedence over styles defined in any other CSS/SCSS
  * files in this directory. Styles in this file should be added after the last require_* statement.
  * It is generally better to create a new file per style scope.
  *
  *= require_tree .
  *= require_self
  */
+
+
+
+
+/* reset
+===========================================
+*/
+
+
+* {
+    text-decoration: none;
+    color: #222;
+}
+
+
+/* table
+========================================
+*/
+
+
+table{									 
+	margin-bottom: 3em;	
+	border-collapse:collapse;
+	margin-right: 3em;	
+    overflow-y: auto;
+    max-height: 800px;
+    width: 100%;
+}
+
+
+	table td {								
+	text-align: center;     
+				
+	padding: 0.2em; 		}		
+
+
+	table th {								
+	text-align: center;					
+	padding: 0.2em;
+	background-color: #4d3575;			
+	color: white;		}			      
+
+	table tr {	
+	height: 1em;	}
+
+	table tr:nth-child(even) {			
+    background-color: #A8D5BA;		}
+
+	table tr:nth-child(odd) {			
+	background-color:#E1C6E8;		}
+
+/* scaffolds
+========================================
+*/
+
+body {
+  background-color: #fff;
+  font-family: verdana, arial, helvetica, sans-serif;
+  font-size: 13px;
+  line-height: 18px;
+  margin: 33px;
+}
+
+p, ol, ul, td {
+  font-family: verdana, arial, helvetica, sans-serif;
+  font-size: 13px;
+  line-height: 18px;
+  margin: 33px;
+}
+
+pre {
+  background-color: #eee;
+  padding: 10px;
+  font-size: 11px;
+}
+
+a {
+
+ 
+
+  &:hover {
+    color: #fff;
+    background-color: #000;
+  }
+}
+
+th {
+  padding-bottom: 5px;
+}
+
+td {
+  padding-bottom: 7px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+div {
+  &.field, &.actions {
+    margin-bottom: 10px;
+  }
+}
+
+#notice {
+  color: green;
+}
+
+.field_with_errors {
+  padding: 2px;
+  background-color: red;
+  display: table;
+}
+
+#error_explanation {
+  width: 450px;
+  border: 2px solid red;
+  padding: 7px;
+  padding-bottom: 0;
+  margin-bottom: 20px;
+  background-color: #f0f0f0;
+
+  h2 {
+    text-align: left;
+    font-weight: bold;
+    padding: 5px 5px 5px 15px;
+    font-size: 12px;
+    margin: -7px;
+    margin-bottom: 0;
+    background-color: #c00;
+    color: #fff;
+  }
+
+  ul li {
+    font-size: 12px;
+    list-style: none;
+  }
+}
+
+label {
+  display: block;
+}
+
+.blue {
+    background-color: #4d3575;
+    color: white;
+    width: 80%;
+    margin:auto;
+}
+
+.blue {
+    color: white;
+    font-size: 1.2em;
+    font-weight: bold;
+    line-height: 50px;
+    text-align: center;
+    vertical-align: middle;
+    border-radius: 20px;
+}
+
+
+/* nav
+==================================
+*/
+
+nav ul {
+  list-style: none;
+  background-color:  #4d3575;
+  text-align: center;
+  padding: 0;
+  margin: 0;
+}
+nav li {
+  font-size: 1.2em;
+  font-weight:bold;
+  line-height: 40px;
+  height: 40px;
+}
+ 
+nav a {
+  text-decoration: none;
+  color: #fff;
+  display: block;
+  transition: .3s background-color;
+}
+ 
+nav a:hover {
+  background-color: #dfd9e7;
+  color: #333;
+}
+ 
+nav a.active {
+  background-color: #fff;
+  color: #222;
+  cursor: default;
+} 
+
+nav li {
+    display: inline-block;
+    margin-right: -3px;
+    width: 25%;
+  }
+
+
+/* form 
+=====================================
+*/
+
+.field{
+	margin-bottom: 15px;
+    display: block;
+    width: 20em;
+}
+
+label{
+	margin-bottom: 15px;
+    background-color: #4d3575;
+    color: white;
+    padding: 5px;
+    
+}
+
+select {
+    
+    width: 100%;
+}
+
+input[type="submit"] {
+    width: 20em;
+    background-color: #4d3575;
+    color: white;
+    padding: 5px;
+    border-radius: 20px;
+    border: none;
+}
+
+
+input[type="submit"]:hover {
+    background-color: #dfd9e7;
+    color: #222;
+}

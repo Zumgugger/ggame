@@ -1,0 +1,42 @@
+<p id="notice"><%= notice %></p>
+
+<div class="row">
+  <h1>Letzte Events</h1>
+  <table>
+    <thead>
+      <tr>
+        <th>Zeit</th>
+        <th>Gruppe</th>
+        <th>Aktion</th>
+        <th>Beschrieb</th>
+        <th>Ziel</th>
+        <th>Gruppenpunkte</th>
+        <th>Zielgruppe</th>
+        <th>Zielpunkte</th>
+        <th></th>
+        
+      </tr>
+    </thead>
+    <tbody>
+      <% @events.each do |event| %>
+        <tr>
+          <td><%= event.time&.strftime("%H:%M:%S") || "-" %></td>
+          <td><%= event.group.name %></td>
+          <td><%= event.option.name %></td>
+          <td><%= event.description %></td>
+          <td><%= event.target.present? ? event.target.name : '' %></td> 
+          <td><%= event.group_points %></td>
+          <td><%= event.target_group.present? ? event.target_group.name : '' %></td>
+          <td><%= event.target_points.present? ? event.target_points : '' %></td>
+          <td>
+            <%= link_to "Show", event_path(event) %> | 
+            <%= link_to "Destroy", event_path(event), method: :delete, data: { confirm: "Are you sure?" } %>
+          </td>
+
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+  <%= link_to 'Neuer Event hinzufügen', new_event_path, class: "blue-button" %>
+</div>
+
