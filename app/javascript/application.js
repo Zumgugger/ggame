@@ -1,8 +1,15 @@
-// Configure your import map in config/importmap.rb. Read more: https://github.com/rails/importmap-rails
-//= require_directory ../assets/javascripts
+import { Application } from "stimulus"
+import { definitionsFromContext } from "stimulus/webpack-helpers"
+import { Turbo } from "@hotwired/turbo-rails"
 
+// Start Stimulus application
+const application = Application.start()
 
-import "@hotwired/turbo-rails"
-import "controllers"
+// Load all controllers from the controllers directory
+const context = require.context("controllers", true, /\.js$/)
+application.load(definitionsFromContext(context))
 
+// Make the application available for debugging in the global scope (optional)
+window.Stimulus = application
 
+export { application }

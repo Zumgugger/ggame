@@ -2,6 +2,7 @@ class EventsController < ApplicationController
   before_action :authenticate_admin_user!
   before_action :set_event, only: [ :show, :destroy ]
 
+
   def main
     @events = Event.includes(:group, :target, :option).order(created_at: :desc).limit(20)
     @groups = Group.all.order(points: :desc)

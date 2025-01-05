@@ -1,9 +1,13 @@
-import { Application } from "@hotwired/stimulus"
+import { Controller } from "stimulus"
 
-const application = Application.start()
+export default class extends Controller {
+  static targets = ["output"]
 
-// Configure Stimulus development experience
-application.debug = false
-window.Stimulus   = application
+  connect() {
+    console.log("Stimulus controller connected")
+  }
 
-export { application }
+  updateOutput() {
+    this.outputTarget.textContent = "Hello, Stimulus!"
+  }
+}
