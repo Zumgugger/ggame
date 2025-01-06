@@ -1,15 +1,16 @@
-import { Application } from "stimulus"
-import { definitionsFromContext } from "stimulus/webpack-helpers"
-import { Turbo } from "@hotwired/turbo-rails"
+import { pplication } from "stimulus";
+import { definitionsFromContext } from "stimulus";
+//import { Turbo } from "@hotwired/turbo-rails";  // If you're using Turbo
 
-// Start Stimulus application
-const application = Application.start()
+// Initialize Stimulus application
+Rails.start();
 
-// Load all controllers from the controllers directory
-const context = require.context("controllers", true, /\.js$/)
-application.load(definitionsFromContext(context))
+// Create a new Stimulus application
+const application = Application.start();
 
-// Make the application available for debugging in the global scope (optional)
-window.Stimulus = application
 
-export { application }
+// Expose the Stimulus app to the global window for debugging (optional)
+window.Stimulus = application;
+
+export { application };
+

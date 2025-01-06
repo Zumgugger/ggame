@@ -1,0 +1,30 @@
+<%= form_for(event) do |f| %>
+  <div class="field" data-controller="form">
+    <%= f.label "Akteur" %>
+    <%= f.collection_select(:group_id, @groups, :id, :name) %>
+  </div>
+
+  <div class="field" id="action">
+    <%= f.label "Aktion" %>
+    <%= f.collection_select(:option_id, @options.order(name: :asc), :id, :name, {}, { id: "action", data: { target: "form.action", action: "change->form#change" } }) %>
+  </div>
+
+  <div class="field" id="minepoints" data-target="form.minepoints" style="display:none;">
+    <%= f.label "Punkte investiert" %>
+    <%= f.select :points_set, (0..5000).step(50).to_a %>
+  </div>
+
+  <div class="field" id="target_group" data-target="form.targetGroup" style="display:none;">
+    <%= f.label "Ziel" %>
+    <%= f.collection_select(:target_group_id, @groups.order(name: :asc), :id, :name) %>
+  </div>
+
+  <div class="field" id="target" data-target="form.target" style="display:none;">
+    <%= f.label "Posten" %>
+    <%= f.collection_select(:target_id, @targets, :id, :name) %>
+  </div>
+
+  <div class="actions">
+    <%= f.submit "Event eintragen" %>
+  </div>
+<% end %>

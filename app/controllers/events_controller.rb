@@ -31,7 +31,7 @@ class EventsController < ApplicationController
     @event = Event.new(event_params)  # Create a new event with the permitted parameters
 
     if @event.save  # If the event is saved successfully
-      redirect_to @event, notice: "Event was successfully created."  # Redirect to the newly created event's show page
+      redirect_to :main_path, notice: "Event was successfully created."  # Redirect to the newly created event's show page
     else
       # If the event fails to save, re-render the form with errors
       @groups = Group.all.order(points: :desc)  # Repopulate groups for the form

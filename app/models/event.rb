@@ -42,7 +42,6 @@ class Event < ApplicationRecord
     event&.description || "-"
   end
 
-
   def self.ransackable_attributes(auth_object = nil)
     [ "id", "created_at", "updated_at", "description", "group_id", "group_points", "noticed", "option_id", "points_set", "target_id", "target_points", "time" ]
   end
