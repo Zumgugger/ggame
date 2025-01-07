@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2024_12_30_202332) do
+ActiveRecord::Schema[7.2].define(version: 2025_01_07_202228) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -87,7 +87,7 @@ ActiveRecord::Schema[7.2].define(version: 2024_12_30_202332) do
 
   create_table "groups", force: :cascade do |t|
     t.string "name"
-    t.integer "points"
+    t.integer "points", default: 0
     t.boolean "false_information"
     t.integer "kopfgeld"
     t.integer "sort_order"

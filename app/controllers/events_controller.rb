@@ -6,7 +6,7 @@ class EventsController < ApplicationController
   def main
     @events = Event.includes(:group, :target, :option).order(created_at: :desc).limit(20)
     @groups = Group.all.order(points: :desc)
-    @title = "Events"
+    @title = "Control Room"
   end
 
   # GET /events
@@ -29,6 +29,7 @@ class EventsController < ApplicationController
   # POST /events
   def create
     @event = Event.new(event_params)  # Create a new event with the permitted parameters
+    @event.calculate_points  # Delegate the calculation logic to the model
 
     if @event.save  # If the event is saved successfully
       redirect_to :main_path, notice: "Event was successfully created."  # Redirect to the newly created event's show page

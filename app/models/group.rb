@@ -6,7 +6,7 @@
 #  false_information :boolean
 #  kopfgeld          :integer
 #  name              :string
-#  points            :integer
+#  points            :integer          default(0)
 #  sort_order        :integer
 #  created_at        :datetime         not null
 #  updated_at        :datetime         not null
