@@ -1,36 +1,36 @@
+<%= javascript_include_tag "formhandler", "data-turbo-track": "reload" %>
+
+
+
+
 <%= form_for(event) do |f| %>
 
   <div class="field">
     <%= f.label "Akteur" %>
-    <%= f.collection_select(:group_id, @groups, :id, :name) %>
+    <%= f.collection_select(:group_id, @groups, :id, :name, { prompt: "Bitte wählen..." }) %>
   </div>
 
   <div class="field">
     <%= f.label "Aktion" %>
-    <%= f.collection_select(:option_id, @options, :id, :name) %>
+    <%= f.collection_select(:option_id, @options, :id, :name, { prompt: "Bitte wählen..." }, { id: "event_option_id", data: { names: @options.to_json } }) %>
+  </div>
+
+  <div class="field" id="target" data-target="form.target" style="display:none;">
+    <%= f.label "Posten" %>
+    <%= f.collection_select(:target_id, @targets, :id, :name, { prompt: "Bitte wählen..." }) %>
   </div>
 
   <div class="field" id="minepoints" data-target="form.minepoints" style="display:none;">
     <%= f.label "Punkte investiert" %>
-    <%= f.select :points_set, (0..5000).step(50).to_a %>
+    <%= f.select :points_set, (0..5000).step(50).to_a, { prompt: "Bitte wählen..." } %>
+  </div>
+
+  <div class="field" id="target_group" data-target="form.targetGroup" style="display:none;">
+    <%= f.label "Ziel" %>
+    <%= f.collection_select(:target_group_id, @groups.order(name: :asc), :id, :name, { prompt: "Bitte wählen..." }) %>
   </div>
 
   <div class="actions">
     <%= f.submit "Submit" %>
   </div>
 <% end %>
-
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  const optionSelect = document.getElementById('event_option_id'); // Replace 'event_option_id' with the actual ID
-  const customFieldContainer = document.getElementById('minepoints');
-
-  optionSelect.addEventListener('change', () => {
-    if (optionSelect.value === 'Hat Mine gesetzt') {
-      customFieldContainer.style.display = 'block';
-    } else {
-      customFieldContainer.style.display = 'none';
-    }
-  });
-});
-</script>

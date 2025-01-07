@@ -1,12 +1,19 @@
 <%= form_for(event) do |f| %>
-  <div class="field" data-controller="form">
+
+  <div class="field">
     <%= f.label "Akteur" %>
     <%= f.collection_select(:group_id, @groups, :id, :name) %>
   </div>
 
-  <div class="field" id="action">
+  <div class="field">
     <%= f.label "Aktion" %>
-    <%= f.collection_select(:option_id, @options.order(name: :asc), :id, :name, {}, { id: "action", data: { target: "form.action", action: "change->form#change" } }) %>
+    <%= f.collection_select(:option_id, @options, :id, :name, {}, { id: "event_option_id", data: { names: @options.to_json } }) %>
+  </div>
+
+
+  <div class="field" id="target" data-target="form.target" style="display:none;">
+    <%= f.label "Posten" %>
+    <%= f.collection_select(:target_id, @targets, :id, :name) %>
   </div>
 
   <div class="field" id="minepoints" data-target="form.minepoints" style="display:none;">
@@ -19,12 +26,7 @@
     <%= f.collection_select(:target_group_id, @groups.order(name: :asc), :id, :name) %>
   </div>
 
-  <div class="field" id="target" data-target="form.target" style="display:none;">
-    <%= f.label "Posten" %>
-    <%= f.collection_select(:target_id, @targets, :id, :name) %>
-  </div>
-
   <div class="actions">
-    <%= f.submit "Event eintragen" %>
+    <%= f.submit "Submit" %>
   </div>
 <% end %>
