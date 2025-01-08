@@ -4,7 +4,7 @@ class EventsController < ApplicationController
 
 
   def main
-    @events = Event.includes(:group, :target, :option).order(created_at: :desc).limit(20)
+    @events = Event.includes(:group, :target, :option).order(created_at: :desc).limit(12).reverse
     @groups = Group.all.order(points: :desc)
     @title = "Control Room"
   end

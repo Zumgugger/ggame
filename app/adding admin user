@@ -1,4 +1,0 @@
-AdminUser.create!(email: 'markus.gugger@gmail.com', password: 'password', password_confirmation: 'password')
-
-
-docker-compose run app bin/rails generate model Group name:string points:integer false_information:boolean kopfgeld:integer sort_order:integer

@@ -18,26 +18,18 @@ Rails.application.routes.draw do
   get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
 
 
-
-
-  # # Routes for events
-  # resources :events do
-  #   collection do
-  #     get "main" # Route for events/main
-  #   end
-  # end
-
   # Custom routes added by me
   namespace :ggame do
     resources :uploads, only: [ :index, :create ]
     resources :resets, only: [ :index ] do
       collection do
-        post :reset_group_points  # This is what generates reset_group_points_path
+        put :reset_group_points  # This is what generates reset_group_points_path
         delete :destroy_all_users
         delete :destroy_all_groups
         delete :destroy_all_events
         put :reset_mines
         put :reset_count
+        put :reset_kopfgeld
       end
     end
   end

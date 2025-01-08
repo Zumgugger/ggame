@@ -42,6 +42,10 @@ class Event < ApplicationRecord
     event&.description || "-"
   end
 
+  def append_to_description(text)
+    self.description = [ self.description, text ].compact.join(", ")
+  end
+
   def self.ransackable_attributes(auth_object = nil)
     [ "id", "created_at", "updated_at", "description", "group_id", "group_points", "noticed", "option_id", "points_set", "target_id", "target_points", "time" ]
   end
@@ -67,13 +71,14 @@ class Event < ApplicationRecord
       else
         self.group_points = target.points - target.mines
         self.group_points += 100 if target.count == 0
-        self.description = "Boom! #{target.mines}" if target.mines != 0
+        append_to_description("Bonus geholt") if target.count == 0
+        append_to_description("Boom! #{target.mines}") if target.mines != 0
         target.mines = 0
         target.count += 1
       end
     when "hat Mine gesetzt"
       if group.points < points_set
-        self.description = "zu teuer"
+        append_to_description("zu teuer")
         self.group_points = 0
       else
         self.group_points = -points_set
@@ -90,11 +95,11 @@ class Event < ApplicationRecord
         @time2 = @last_foto.time
       end
       if group == target_group
-        self.description = "eigene Gruppe"
+        append_to_description("eigene Gruppe")
         self.group_points = 0
         self.target_points = 0
-      elsif @time + 60.minutes > Time.now || @time2 + 60.minutes > Time.now
-        self.description = "zu früh"
+      elsif @time + 60.minutes < Time.now || @time2 + 60.minutes > Time.now # look here!
+        append_to_description("zu früh")
         self.group_points = 0
         self.target_points = 0
       else
@@ -102,7 +107,7 @@ class Event < ApplicationRecord
         if target_group.kopfgeld != 0
           self.group_points += target_group.kopfgeld
           target_group.kopfgeld = 0
-          self.description = "Kopfgeld geholt"
+          append_to_description("Kopfgeld geholt")
         end
         self.target_points = -400
         target_group.points += self.target_points
@@ -160,7 +165,7 @@ class Event < ApplicationRecord
         self.description = "eigene Gruppe"
         self.group_points = 0
         self.target_points = 0
-      elsif @time + 10.minutes < Time.now
+      elsif Time.now <= @time + 10.minutes
         self.description = "zu spät bzw. falsche Gruppe"
         self.group_points = 0
         self.target_points = 0

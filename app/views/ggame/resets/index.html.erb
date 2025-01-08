@@ -13,8 +13,13 @@
                 class: 'btn btn-warning' %>
 
 <%= button_to 'Reset All Group Points', reset_group_points_ggame_resets_path, 
-                method: :post, 
+                method: :put, 
                 data: { confirm: 'Are you sure you want to reset all group points to 0?' }, 
+                class: 'btn btn-danger' %>
+
+<%= button_to 'Reset Kopfgelder', reset_kopfgeld_ggame_resets_path, 
+                method: :put, 
+                data: { confirm: 'Are you sure you want to reset all kopfgeld points to 0?' }, 
                 class: 'btn btn-danger' %>
 
 
@@ -32,3 +37,5 @@
               method: :delete, 
               data: { confirm: "Are you sure you want to delete all groups? This action cannot be undone." },
               class: "btn btn-danger" %>
+
+<%= link_to "zum Control Room", main_path %>

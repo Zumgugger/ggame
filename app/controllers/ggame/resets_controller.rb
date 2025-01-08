@@ -10,13 +10,18 @@ class Ggame::ResetsController < ApplicationController
 
   # Action to reset the count for all targets
   def reset_count
-    Target.update_all(count: 0)  # Reset count to 0 for all targets
+    Target.update_all(count: 0)
     redirect_to ggame_resets_path, notice: "Target count reset to 0 for all targets."
   end
 
   def reset_group_points
     Group.update_all(points: 0)
     redirect_to ggame_resets_path, notice: "All group points have been reset to 0."
+  end
+
+  def reset_kopfgeld
+    Group.update_all(kopfgeld: 0)
+    redirect_to ggame_resets_path, notice: "All Kopfgeld points have been reset to 0."
   end
 
 

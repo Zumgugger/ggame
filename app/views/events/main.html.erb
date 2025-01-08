@@ -28,7 +28,7 @@
       <% end %>
     </tbody>
   </table>
-  <%= link_to 'Neuer Event hinzufügen', new_event_path, class: "blue-button" %>
+  <%= link_to 'Neues Event hinzufügen', new_event_path, class: "button" %>
 </div>
 
 <div class="col-3 col-m-12">
@@ -60,6 +60,8 @@
           <td><%= link_to 'Edit', edit_admin_group_path(group) %></td>
         </tr>
       <% end %>
+
     </tbody>
   </table>
 </div>
+      <%= link_to "admin, tread with care!", admin_root_path %>
