@@ -87,7 +87,7 @@ class Event < ApplicationRecord
     when "hat Gruppe fotografiert"
       @last_foto_made = Event.where(option: option, target_group: target_group, group: group).where.not(group_points: 0).last
       @last_foto_got = Event.where(option: option, target_group: group, group: target_group).where.not(group_points: 0).last
-      @time_last_foto_got = @time_last_foto_made = Time.now - 100.minutes # set the default somewhere in the distant past
+      @time_last_foto_got = @time_last_foto_made = Time.now - 1.days # set the default somewhere in the distant past
       if @last_foto_made
         @time_last_foto_made = @last_foto_made.time
       end
@@ -165,25 +165,35 @@ class Event < ApplicationRecord
         self.group_points = -300
         group.false_information = true
       end
-    when "hat Foto bemerkt" # fix this.
+    when "hat Foto bemerkt"
       @option = Option.where(name: "hat Gruppe fotografiert")
-      @last_foto_event = Event.where(option: @option, target_group: target_group, group: group).last
-      @time = Time.now - 60.minutes
-      if @last_foto_event
-        @time = @last_foto_event.time
+      @last_foto_got = Event
+        .joins(:option) # Ensures the query includes the `Option` association
+        .where(options: { name: "hat Gruppe fotografiert" }, target_group: group, group: target_group)
+        .where.not(group_points: 0)
+        .last
+      @foto_noticed = Event.where(option: option, group: group, target_group: target_group).last
+      @time = Time.now - 1.days # set the default in the distant past
+      if @last_foto_got
+        @time = @last_foto_got.time
       end
-      if group == target_group
-        self.description = "eigene Gruppe"
+      if (@foto_noticed&.time || Time.at(0)) + 10.minutes > Time.now
+        append_to_description("Foto bemerkt wurde schon eingetragen")
         self.group_points = 0
         self.target_points = 0
-      elsif Time.now <= @time + 10.minutes
-        self.description = "zu spät bzw. falsche Gruppe"
+      elsif group == target_group
+        append_to_description("eigene Gruppe")
+        self.group_points = 0
+        self.target_points = 0
+      elsif Time.now > @time + 10.minutes
+        append_to_description("zu spät bzw. falsche Gruppe")
         self.group_points = 0
         self.target_points = 0
       else
         self.group_points = 200
         self.target_points = -200
         target_group.points += self.target_points
+        append_to_description("#{@last_foto_got.time}, #{@time}")
       end
     when "hat Kopfgeld gesetzt"
       if group.points < points_set
