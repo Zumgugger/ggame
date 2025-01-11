@@ -23,6 +23,8 @@ module Ggame
     #
     # Set the timezone to Zurich (Switzerland)
     config.time_zone = "Europe/Zurich"
+    config.active_record.default_timezone = :local
+    # config.active_record.default_timezone = :utc # Store and retrieve times in UTC
 
     # config.eager_load_paths << Rails.root.join("extras")
   end

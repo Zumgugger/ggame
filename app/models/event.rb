@@ -85,24 +85,35 @@ class Event < ApplicationRecord
         target.mines += 2 * points_set
       end
     when "hat Gruppe fotografiert"
-      @last_foto_event = Event.where(option: option, target_group: target_group, group: group).last
-      @last_foto = Event.where(option: option, target_group: target_group, group: group).last
-      @time = @time2 = Time.now - 60.minutes
-      if @last_foto_event
-        @time = @last_foto_event.time
+      @last_foto_made = Event.where(option: option, target_group: target_group, group: group).where.not(group_points: 0).last
+      @last_foto_got = Event.where(option: option, target_group: group, group: target_group).where.not(group_points: 0).last
+      @time_last_foto_got = @time_last_foto_made = Time.now - 100.minutes # set the default somewhere in the distant past
+      if @last_foto_made
+        @time_last_foto_made = @last_foto_made.time
       end
-      if @last_foto
-        @time2 = @last_foto.time
+      if @last_foto_got
+        @time_last_foto_got = @last_foto_got.time
       end
+      error_triggered = false
       if group == target_group
         append_to_description("eigene Gruppe")
         self.group_points = 0
         self.target_points = 0
-      elsif @time + 60.minutes < Time.now || @time2 + 60.minutes > Time.now # look here!
-        append_to_description("zu früh")
+        error_triggered = true
+      end
+      if @time_last_foto_made + 60.minutes > Time.now
+        append_to_description(" zu früh wieder fotografiert ")
         self.group_points = 0
         self.target_points = 0
-      else
+        error_triggered = true
+      end
+      if @time_last_foto_got + 60.minutes > Time.now
+        append_to_description("zu früh zurückfotografiert ")
+        self.group_points = 0
+        self.target_points = 0
+        error_triggered = true
+      end
+      unless error_triggered
         self.group_points = 400
         if target_group.kopfgeld != 0
           self.group_points += target_group.kopfgeld
@@ -154,7 +165,7 @@ class Event < ApplicationRecord
         self.group_points = -300
         group.false_information = true
       end
-    when "hat Foto bemerkt"
+    when "hat Foto bemerkt" # fix this.
       @option = Option.where(name: "hat Gruppe fotografiert")
       @last_foto_event = Event.where(option: @option, target_group: target_group, group: group).last
       @time = Time.now - 60.minutes
