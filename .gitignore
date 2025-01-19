@@ -10,6 +10,8 @@
 # Ignore all environment files (except templates).
 /.env*
 !/.env*.erb
+/docker-compose.override.yml
+/working_docker-compose.old
 
 # Ignore all logfiles and tempfiles.
 /log/*
