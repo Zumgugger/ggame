@@ -20,5 +20,8 @@ test:
 production:
   <<: *default
   database: ggame_production
-  username: ggame
-  password: <%= ENV["GGAME_DATABASE_PASSWORD"] %>
+  username: <%= ENV['GGAME_DATABASE_USER'] %>
+  password: <%= ENV['GGAME_DATABASE_PASSWORD'] %>
+  host: <%= ENV['GGAME_DATABASE_HOST'] %>
+  port: <%= ENV['GGAME_DATABASE_PORT'] %>
+  sslmode: <%= ENV['GGAME_DATABASE_SSLMODE'] %>
