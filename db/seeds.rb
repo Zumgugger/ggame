@@ -10,17 +10,17 @@
 # Datenbank mit meist gebrauchten Dingen füllen
 
 
-# Option.create([
-#   { name: "hat Posten geholt", count: 0, active: true },
-#   { name: "hat Mine gesetzt", count: 0, active: true },
-#   { name: "hat Gruppe fotografiert", count: 0, active: true },
-#   { name: "hat sondiert", count: 0, active: true },
-#   { name: "hat spioniert", count: 0, active: true },
-#   { name: "hat Foto bemerkt", count: 0, active: true },
-#   { name: "Spionageabwehr", count: 0, active: true },
-#   { name: "hat Kopfgeld gesetzt", count: 0, active: true },
-#   { name: "hat Mine entschärft", count: 0, active: true }
-# ])
+ Option.create([
+   { name: "hat Posten geholt", count: 0, active: true },
+   { name: "hat Mine gesetzt", count: 0, active: true },
+   { name: "hat Gruppe fotografiert", count: 0, active: true },
+   { name: "hat sondiert", count: 0, active: true },
+   { name: "hat spioniert", count: 0, active: true },
+   { name: "hat Foto bemerkt", count: 0, active: true },
+   { name: "Spionageabwehr", count: 0, active: true },
+   { name: "hat Kopfgeld gesetzt", count: 0, active: true },
+   { name: "hat Mine entschärft", count: 0, active: true }
+ ])
 
 
 
