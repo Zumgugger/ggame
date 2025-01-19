@@ -3,6 +3,20 @@ default: &default
   encoding: unicode
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
 
+development:
+  <<: *default
+  database: ggame_development
+  host: db  # Point to the db service in docker-compose.yml
+  username: postgres
+  password: password
+
+test:
+  <<: *default
+  database: ggame_test
+  host: db
+  username: postgres
+  password: password
+
 production:
   <<: *default
   database: ggame_production
