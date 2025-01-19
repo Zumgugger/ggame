@@ -1,3 +1,4 @@
+version: '3.8'
 services:
   app:
     build: .
@@ -7,21 +8,19 @@ services:
       - ".:/app"
     depends_on:
       - db
-    environment:
-      - TZ=Europe/Zurich # Set the time zone for the app container
-
+    env_file:
+      - .env
   db:
     image: postgres:14
+    pull_policy: always
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: ggame_development
-      TZ: Europe/Zurich # Set the time zone for the database container
+      POSTGRES_USER: ${GGAME_DATABASE_USER}
+      POSTGRES_PASSWORD: ${GGAME_DATABASE_PASSWORD}
+      POSTGRES_DB: ggame_production
+      TZ: ${TZ}
     ports:
       - "5432:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
-
 volumes:
   db_data:
-
