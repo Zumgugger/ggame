@@ -21,6 +21,11 @@ ActiveAdmin.register_page "Dashboard" do
     panel "Resets" do
       link_to "Go to Resets Page", ggame_resets_path
     end
+
+    panel "Logout" do
+      link_to "logout", destroy_admin_user_session_path
+    end
+
     # Here is an example of a simple dashboard with columns and panels.
     #
     # columns do

@@ -1,7 +1,9 @@
-# edited by my
-#
 ActiveAdmin.register User do
-  permit_params :group_id, :email, :phone_number, :created_at, :updated_at, :sign_in_count
+  permit_params do
+    permitted = [ :group_id, :email, :phone_number, :name ]
+    permitted += [ :password, :password_confirmation ] if params[:action] == "create"
+    permitted
+  end
 
   index do
     selectable_column
@@ -9,6 +11,7 @@ ActiveAdmin.register User do
     column :group, sortable: "groups.name" do |user|
       user.group&.name || "No Group"
     end
+    column :name
     column :email
     column :phone_number
     column :created_at
@@ -18,6 +21,7 @@ ActiveAdmin.register User do
     actions
   end
 
+  filter :name
   filter :email
   filter :phone_number
   filter :created_at
@@ -26,15 +30,20 @@ ActiveAdmin.register User do
 
   form do |f|
     f.inputs do
+      f.input :name
       f.input :email
       f.input :phone_number
-      if f.object.group.present?
-        f.input :group, as: :select, collection: Group.all, include_blank: "Select Group"
-        span "This user is already assigned to the group #{f.object.group.name}", class: "help-block"
+      f.input :group, as: :select, collection: Group.all, include_blank: "Select Group"
+      if f.object.new_record?
+        f.input :password, input_html: { value: "test123" }
+        f.input :password_confirmation, input_html: { value: "test123" }
       else
-        f.input :group, as: :select, collection: Group.all, include_blank: "Select Group"
+        f.input :password
+        f.input :password_confirmation
       end
-      # f.input :group, as: :select, collection: Group.all.collect { |g| [ g.name, g.id ] }, include_blank: true
+      if f.object.persisted? && f.object.group.present?
+        span "This user is already assigned to the group #{f.object.group.name}", class: "help-block"
+      end
     end
     f.actions
   end
@@ -42,6 +51,17 @@ ActiveAdmin.register User do
   controller do
     def scoped_collection
       super.includes(:group).order("groups.name DESC") # Sort by group name
+    end
+
+    def create
+      @user = User.new(permitted_params[:user])
+      if @user.save
+        redirect_to admin_user_path(@user), notice: "User successfully created."
+      else
+        Rails.logger.error(@user.errors.full_messages.to_sentence)
+        flash[:error] = @user.errors.full_messages.to_sentence
+        render :new
+      end
     end
   end
 end

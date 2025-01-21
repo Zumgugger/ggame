@@ -34,7 +34,7 @@ class User < ApplicationRecord
   # Define searchable attributes for Ransack
   def self.ransackable_attributes(auth_object = nil)
     # List the attributes you want to be searchable
-    [ "id", "email", "phone_number", "created_at", "updated_at", "remember_created_at", "reset_password_sent_at" ]
+    [ "id", "name", "email", "phone_number", "created_at", "updated_at", "remember_created_at", "reset_password_sent_at" ]
   end
 
   def self.ransackable_associations(auth_object = nil)
