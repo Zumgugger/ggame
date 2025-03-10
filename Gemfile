@@ -42,7 +42,7 @@ gem "warden", "~> 1.2"
 gem "orm_adapter", "~> 0.5"
 
 # added by me for Active admin, an Admin interface for administrating users and more
-gem "activeadmin", "~> 3.2.5"
+gem "activeadmin", "~> 3.3.0"
 gem "arbre", "~> 1.7.0"
 gem "csv", "~> 3.3.2"
 gem "formtastic", "~> 5.0.0"
