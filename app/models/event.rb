@@ -193,7 +193,7 @@ class Event < ApplicationRecord
         self.group_points = 200
         self.target_points = -200
         target_group.points += self.target_points
-        append_to_description("#{@last_foto_got.time}, #{@time}")
+        append_to_description("Foto von #{@last_foto_got.time.strftime("%H:%M")} bemerkt.")
       end
     when "hat Kopfgeld gesetzt"
       if group.points < points_set

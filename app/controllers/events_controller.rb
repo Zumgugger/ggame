@@ -22,9 +22,9 @@ class EventsController < ApplicationController
   # GET /events/new
   def new
     @event = Event.new  # Initialize the event for the form
-    @groups = Group.all.order(name: :asc)
-    @options = Option.all.order(name: :asc)
-    @targets = Target.all.order(sort_order: :asc)
+    @groups = Group.all.order(id: :asc)
+    @options = Option.all.order(id: :asc)
+    @targets = Target.all.order(id: :asc)
   end
   # POST /events
   def create
@@ -35,9 +35,9 @@ class EventsController < ApplicationController
       redirect_to :main_path, notice: "Event was successfully created."  # Redirect to the newly created event's show page
     else
       # If the event fails to save, re-render the form with errors
-      @groups = Group.all.order(points: :desc)  # Repopulate groups for the form
-      @options = Option.all.order(name: :asc)   # Repopulate options for the form
-      @targets = Target.all.order(name: :asc)   # Repopulate targets for the form
+      @groups = Group.all.order(id: :asc)  # Repopulate groups for the form
+      @options = Option.all.order(id: :asc)   # Repopulate options for the form
+      @targets = Target.all.order(id: :asc)   # Repopulate targets for the form
       render :new  # Render the form again to display errors
     end
   end
