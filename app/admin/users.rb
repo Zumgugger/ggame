@@ -31,7 +31,7 @@ ActiveAdmin.register User do
   form do |f|
     f.inputs do
       f.input :name
-      f.input :email
+      f.input :email, required: false
       f.input :phone_number
       f.input :group, as: :select, collection: Group.all, include_blank: "Select Group"
       if f.object.new_record?

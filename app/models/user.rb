@@ -3,7 +3,7 @@
 # Table name: users
 #
 #  id                     :bigint           not null, primary key
-#  email                  :string           default(""), not null
+#  email                  :string
 #  encrypted_password     :string           default(""), not null
 #  name                   :string
 #  phone_number           :string
@@ -29,7 +29,8 @@ class User < ApplicationRecord
   # Include default devise modules. Others available are:
   # :confirmable, :lockable, :timeoutable, :trackable and :omniauthable
   devise :database_authenticatable, :registerable,
-         :recoverable, :rememberable, :validatable
+         :recoverable, :rememberable
+         validates :email, uniqueness: true, allow_blank: true
 
   # Define searchable attributes for Ransack
   def self.ransackable_attributes(auth_object = nil)

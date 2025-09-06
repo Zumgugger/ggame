@@ -58,9 +58,19 @@ class Event < ApplicationRecord
   def calculate_points
     self.time = Time.now
     self.group_points = 0
-    group = Group.find(group_id)
-    target = Target.find(target_id) if target_id
-    target_group = Group.find(target_group_id) if target_group_id
+    group = Group.find(group_id) if group_id.present?
+    target = Target.find(target_id) if target_id.present?
+    target_group = Group.find(target_group_id) if target_group_id.present?
+
+    if group
+      group.points    = (group.points    || 0).to_i
+      group.kopfgeld  = (group.kopfgeld  || 0).to_i if group.respond_to?(:kopfgeld)
+    end
+
+    if target_group
+      target_group.points   = (target_group.points   || 0).to_i
+      target_group.kopfgeld = (target_group.kopfgeld || 0).to_i if target_group.respond_to?(:kopfgeld)
+    end
 
     case option.name
     when "hat Posten geholt"
