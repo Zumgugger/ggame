@@ -17,6 +17,8 @@ ActiveAdmin.register Submission do
   # Scopes for quick filtering
   scope :all
   scope :pending, default: true
+  scope :processable, label: "Bereit"
+  scope :queued, label: "In Warteschlange"
   scope :verified
   scope :denied
 
@@ -50,11 +52,29 @@ ActiveAdmin.register Submission do
     column :status do |submission|
       case submission.status
       when 'pending'
-        status_tag 'Ausstehend', class: 'warning'
+        if submission.queued?
+          status_tag '⏳ Warteschlange', class: 'warning'
+        else
+          status_tag 'Ausstehend', class: 'warning'
+        end
       when 'verified'
         status_tag 'Bestätigt', class: 'yes'
       when 'denied'
         status_tag 'Abgelehnt', class: 'no'
+      end
+    end
+    
+    column "Warteschlange" do |submission|
+      if submission.queued?
+        span style: 'color: #f0ad4e; font-size: 12px;' do
+          "⏳ #{submission.queue_reason}"
+        end
+      elsif submission.queued_submissions.pending.any?
+        span style: 'color: #5bc0de; font-size: 12px;' do
+          "🔒 Blockiert #{submission.queued_submissions.pending.count} andere"
+        end
+      else
+        '-'
       end
     end
     
@@ -89,19 +109,25 @@ ActiveAdmin.register Submission do
     # Quick action buttons for pending submissions
     column "Aktionen" do |submission|
       if submission.status == 'pending'
-        span do
-          button_to '✓ Bestätigen', verify_admin_submission_path(submission), 
-                    method: :post, 
-                    class: 'button small',
-                    style: 'background-color: #5cb85c; border: none; margin-right: 5px;',
-                    data: { confirm: 'Einreichung bestätigen?' }
-        end
-        span do
-          button_to '✗ Ablehnen', deny_admin_submission_path(submission), 
-                    method: :post, 
-                    class: 'button small',
-                    style: 'background-color: #d9534f; border: none;',
-                    data: { confirm: 'Einreichung ablehnen?' }
+        if submission.queued?
+          span style: 'color: #f0ad4e;' do
+            "Warten auf ##{submission.queued_behind_id}"
+          end
+        else
+          span do
+            button_to '✓ Bestätigen', verify_admin_submission_path(submission), 
+                      method: :post, 
+                      class: 'button small',
+                      style: 'background-color: #5cb85c; border: none; margin-right: 5px;',
+                      data: { confirm: 'Einreichung bestätigen?' }
+          end
+          span do
+            button_to '✗ Ablehnen', deny_admin_submission_path(submission), 
+                      method: :post, 
+                      class: 'button small',
+                      style: 'background-color: #d9534f; border: none;',
+                      data: { confirm: 'Einreichung ablehnen?' }
+          end
         end
       else
         submission.verified_by&.email || '-'
@@ -118,16 +144,47 @@ ActiveAdmin.register Submission do
       row :status do |submission|
         case submission.status
         when 'pending'
-          status_tag 'Ausstehend', class: 'warning'
+          if submission.queued?
+            status_tag '⏳ In Warteschlange', class: 'warning'
+          else
+            status_tag 'Ausstehend', class: 'warning'
+          end
         when 'verified'
           status_tag 'Bestätigt', class: 'yes'
         when 'denied'
           status_tag 'Abgelehnt', class: 'no'
         end
       end
+      if resource.queued?
+        row "Warteschlange" do |submission|
+          div style: 'color: #f0ad4e;' do
+            "⏳ #{submission.queue_reason}"
+          end
+          div style: 'margin-top: 5px;' do
+            link_to "→ Blockierende Einreichung ##{submission.queued_behind_id} anzeigen", 
+                    admin_submission_path(submission.queued_behind_id)
+          end
+        end
+      end
+      if resource.queued_submissions.pending.any?
+        row "Blockiert" do |submission|
+          div style: 'color: #5bc0de;' do
+            "🔒 Diese Einreichung blockiert #{submission.queued_submissions.pending.count} andere:"
+          end
+          ul do
+            submission.queued_submissions.pending.each do |queued|
+              li do
+                link_to "##{queued.id}: #{queued.group.name} - #{queued.option.name}", 
+                        admin_submission_path(queued)
+              end
+            end
+          end
+        end
+      end
       row :group
       row :option
       row :target
+      row :target_group
       row "Spieler" do |submission|
         submission.player_session&.player_name
       end
@@ -155,6 +212,11 @@ ActiveAdmin.register Submission do
     # Action panel for pending submissions
     if resource.status == 'pending'
       panel "Aktion" do
+        if resource.queued?
+          div class: 'flash flash_alert', style: 'margin-bottom: 15px;' do
+            "⚠️ Diese Einreichung ist in der Warteschlange. Sie sollte erst nach ##{resource.queued_behind_id} bearbeitet werden."
+          end
+        end
         div style: 'display: flex; gap: 20px; align-items: flex-start;' do
           div style: 'flex: 1;' do
             active_admin_form_for [:admin, resource], url: verify_admin_submission_path(resource), method: :post do |f|
@@ -189,6 +251,9 @@ ActiveAdmin.register Submission do
     div do
       h4 "Aktuelle Warteschlange"
       para "Ausstehend: #{Submission.pending.count}"
+      para "→ Bereit: #{Submission.processable.count}"
+      para "→ In Warteschlange: #{Submission.queued.count}"
+      hr
       para "Heute bestätigt: #{Submission.verified.where('verified_at > ?', Date.today.beginning_of_day).count}"
       para "Heute abgelehnt: #{Submission.denied.where('verified_at > ?', Date.today.beginning_of_day).count}"
     end
@@ -197,7 +262,7 @@ ActiveAdmin.register Submission do
   # Controller customizations
   controller do
     def scoped_collection
-      super.includes(:group, :option, :target, :target_group, :player_session, :verified_by)
+      super.includes(:group, :option, :target, :target_group, :player_session, :verified_by, :queued_behind, :queued_submissions)
     end
   end
 end

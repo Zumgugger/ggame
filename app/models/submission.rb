@@ -6,6 +6,7 @@
 #  admin_message     :text
 #  description       :text
 #  points_set        :integer
+#  queue_reason      :string
 #  status            :string           default("pending"), not null
 #  submitted_at      :datetime         not null
 #  verified_at       :datetime
@@ -14,6 +15,7 @@
 #  group_id          :bigint           not null
 #  option_id         :bigint           not null
 #  player_session_id :bigint           not null
+#  queued_behind_id  :bigint
 #  target_group_id   :bigint
 #  target_id         :bigint
 #  verified_by_id    :bigint
@@ -24,6 +26,7 @@
 #  index_submissions_on_group_id           (group_id)
 #  index_submissions_on_option_id          (option_id)
 #  index_submissions_on_player_session_id  (player_session_id)
+#  index_submissions_on_queued_behind_id   (queued_behind_id)
 #  index_submissions_on_status             (status)
 #  index_submissions_on_submitted_at       (submitted_at)
 #  index_submissions_on_target_group_id    (target_group_id)
@@ -35,6 +38,7 @@
 #  fk_rails_...  (group_id => groups.id)
 #  fk_rails_...  (option_id => options.id)
 #  fk_rails_...  (player_session_id => player_sessions.id)
+#  fk_rails_...  (queued_behind_id => submissions.id) ON DELETE => nullify
 #  fk_rails_...  (target_group_id => groups.id)
 #  fk_rails_...  (target_id => targets.id)
 #  fk_rails_...  (verified_by_id => admin_users.id)
@@ -50,6 +54,8 @@ class Submission < ApplicationRecord
   belongs_to :target_group, class_name: 'Group', optional: true  # Target group (for group actions)
   belongs_to :player_session
   belongs_to :verified_by, class_name: 'AdminUser', optional: true
+  belongs_to :queued_behind, class_name: 'Submission', optional: true
+  has_many :queued_submissions, class_name: 'Submission', foreign_key: 'queued_behind_id', dependent: :nullify
 
   # Photo attachment via ActiveStorage
   has_one_attached :photo
@@ -68,17 +74,26 @@ class Submission < ApplicationRecord
   scope :pending, -> { where(status: 'pending') }
   scope :verified, -> { where(status: 'verified') }
   scope :denied, -> { where(status: 'denied') }
+  scope :queued, -> { where.not(queued_behind_id: nil) }
+  scope :processable, -> { pending.where(queued_behind_id: nil) }
   scope :recent, -> { order(submitted_at: :desc) }
   scope :oldest_first, -> { order(submitted_at: :asc) }
 
   # Callbacks
   before_validation :set_submitted_at, on: :create
+  after_create_commit :check_and_set_queue
   after_create_commit :broadcast_new_submission
   after_update_commit :broadcast_status_change, if: :saved_change_to_status?
+  after_update_commit :release_queued_submissions, if: :saved_change_to_status?
 
   # Verify the submission and create an Event
   def verify!(admin_user, message: nil)
     return false if status != 'pending'
+    
+    # Warn if this submission is queued (admin is forcing verification)
+    if queued?
+      Rails.logger.warn "Verifying queued submission ##{id} (queued behind ##{queued_behind_id})"
+    end
 
     transaction do
       # Create the Event with correct target types
@@ -99,7 +114,9 @@ class Submission < ApplicationRecord
         status: 'verified',
         verified_at: Time.current,
         verified_by: admin_user,
-        admin_message: message
+        admin_message: message,
+        queued_behind_id: nil,
+        queue_reason: nil
       )
 
       event
@@ -117,8 +134,23 @@ class Submission < ApplicationRecord
       status: 'denied',
       verified_at: Time.current,
       verified_by: admin_user,
-      admin_message: message.presence || 'Abgelehnt'
+      admin_message: message.presence || 'Abgelehnt',
+      queued_behind_id: nil,
+      queue_reason: nil
     )
+  end
+
+  # Queue status methods
+  def queued?
+    queued_behind_id.present?
+  end
+
+  def processable?
+    pending? && !queued?
+  end
+
+  def pending?
+    status == 'pending'
   end
 
   # Check if this option requires a Posten (Target)
@@ -172,11 +204,11 @@ class Submission < ApplicationRecord
   # Ransackable attributes for ActiveAdmin search
   def self.ransackable_attributes(auth_object = nil)
     %w[id group_id option_id target_id target_group_id player_session_id status description admin_message 
-       submitted_at verified_at verified_by_id created_at updated_at]
+       submitted_at verified_at verified_by_id queued_behind_id queue_reason created_at updated_at]
   end
 
   def self.ransackable_associations(auth_object = nil)
-    %w[group option target target_group player_session verified_by photo_attachment photo_blob]
+    %w[group option target target_group player_session verified_by queued_behind queued_submissions photo_attachment photo_blob]
   end
 
   private
@@ -265,5 +297,32 @@ class Submission < ApplicationRecord
         })
       end
     end
+  end
+
+  # Check if this submission should be queued behind another
+  def check_and_set_queue
+    result = QueueManager.check_queue(self)
+    
+    if result[:queued]
+      update_columns(
+        queued_behind_id: result[:behind].id,
+        queue_reason: result[:reason]
+      )
+      
+      # Broadcast queue update to admin
+      ActionCable.server.broadcast("submissions_admin", {
+        type: "submission_queued",
+        submission_id: id,
+        queued_behind_id: result[:behind].id,
+        queue_reason: result[:reason]
+      })
+    end
+  end
+
+  # Release submissions that were waiting on this one
+  def release_queued_submissions
+    return unless status.in?(%w[verified denied])
+    
+    QueueManager.process_queue_after(self)
   end
 end

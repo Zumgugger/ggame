@@ -2,7 +2,7 @@
 
 > **Document Created:** January 17, 2026  
 > **Last Updated:** January 17, 2026
-> **Status:** Phase 1-5 Complete, Phase 6 Next  
+> **Status:** Phase 1-6 Complete, Phase 7 Next  
 > **Estimated Total Effort:** 4-6 weeks
 
 ---
@@ -328,18 +328,27 @@ add_column :events, :queued_behind_id, :bigint, optional: true
 
 ---
 
-### Phase 6: Verification Queue Logic (Week 4)
+### Phase 6: Verification Queue Logic (Week 4) ✅ COMPLETE
 **Goal:** Maintain event time ordering
 
-| Task | Description | Effort |
-|------|-------------|--------|
-| 6.1 | Add `queued_behind_id` to events | 1h |
-| 6.2 | Queue detection logic (pending submission blocks newer) | 3h |
-| 6.3 | Queue visualization in admin | 2h |
-| 6.4 | Auto-process queue when blocking submission verified | 2h |
-| 6.5 | Handle denied submission (release queue) | 2h |
+| Task | Description | Status | Effort |
+|------|-------------|--------|--------|
+| 6.1 | Add `queued_behind_id` to submissions | ✅ Done | 1h |
+| 6.2 | Queue detection logic (pending submission blocks newer) | ✅ Done | 3h |
+| 6.3 | Queue visualization in admin | ✅ Done | 2h |
+| 6.4 | Auto-process queue when blocking submission verified | ✅ Done | 2h |
+| 6.5 | Handle denied submission (release queue) | ✅ Done | 2h |
 
-**Deliverable:** Events maintain correct time order despite verification delays
+**Additions:**
+- ✅ QueueManager service for centralized queue logic
+- ✅ "hat Foto bemerkt" waits for pending "hat Gruppe fotografiert"
+- ✅ "hat Gruppe fotografiert" waits for pending "hat Foto bemerkt" (time ordering)
+- ✅ Admin scopes: "Bereit" and "In Warteschlange"
+- ✅ Visual indicators showing blocked/blocking submissions
+- ✅ ActionCable broadcasts for queue changes
+- ✅ Warning when admin verifies a queued submission
+
+**Deliverable:** Events maintain correct time order despite verification delays ✅
 
 ---
 
@@ -769,12 +778,28 @@ end
   - `player_visible_points` shows delayed points to players
   - Admin always sees real points
 
-### Next Steps (Phase 6: Verification Queue Logic):
-1. Add `queued_behind_id` to events for time ordering
-2. Queue detection logic (pending submission blocks newer)
-3. Queue visualization in admin
-4. Auto-process queue when blocking submission verified
-5. Handle denied submission (release queue)
+### Completed in Phase 6:
+- ✅ `queued_behind_id` and `queue_reason` columns on Submissions
+- ✅ QueueManager service for centralized queue logic
+- ✅ Queue detection on submission create:
+  - "hat Foto bemerkt" waits for pending "hat Gruppe fotografiert"
+  - "hat Gruppe fotografiert" waits for pending "hat Foto bemerkt"
+- ✅ Admin scopes: "Bereit" (processable) and "In Warteschlange" (queued)
+- ✅ Visual indicators in admin:
+  - ⏳ Warteschlange status tag
+  - Queue reason displayed
+  - 🔒 Shows how many submissions are blocked
+  - Links to blocking/blocked submissions
+- ✅ Auto-release queue when blocking submission is verified/denied
+- ✅ ActionCable broadcasts for queue changes
+- ✅ Warning when admin verifies a queued submission
+
+### Next Steps (Phase 7: Photo Download & Archive):
+1. "Download & Archive" button in admin
+2. Trigger local download via browser
+3. Delete photo from server after download
+4. Confirmation dialog before delete
+5. Bulk download/delete for multiple submissions
 
 ---
 
