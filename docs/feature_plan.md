@@ -1,7 +1,8 @@
 # GGame Feature Implementation Plan
 
 > **Document Created:** January 17, 2026  
-> **Status:** Planning Phase  
+> **Last Updated:** January 17, 2026
+> **Status:** Phase 1 Complete - Proceeding to Phase 1.8-1.9 (Point Multiplier & Cooldowns)  
 > **Estimated Total Effort:** 4-6 weeks
 
 ---
@@ -198,22 +199,29 @@ add_column :events, :queued_behind_id, :bigint, optional: true
 
 ## 4. Implementation Phases
 
-### Phase 1: Foundation & Settings (Week 1)
+### Phase 1: Foundation & Settings (Week 1) ✅ MOSTLY COMPLETE
 **Goal:** Core settings infrastructure
 
-| Task | Description | Effort |
-|------|-------------|--------|
-| 1.1 | Create `game_settings` migration & model | 2h |
-| 1.2 | Create `option_settings` migration & model | 2h |
-| 1.3 | Build GameSettings singleton pattern | 1h |
-| 1.4 | Admin view for GameSettings (point multiplier, time window) | 3h |
-| 1.5 | Admin view for OptionSettings (per-option config) | 4h |
-| 1.6 | "Reset to Defaults" functionality | 2h |
-| 1.7 | Manual start/stop game buttons in admin | 2h |
-| 1.8 | Update Event point calculations to use multiplier | 2h |
-| 1.9 | Add cooldown checking logic | 3h |
+| Task | Description | Status | Effort |
+|------|-------------|--------|--------|
+| 1.1 | Create `game_settings` migration & model | ✅ Done | 2h |
+| 1.2 | Create `option_settings` migration & model | ✅ Done | 2h |
+| 1.3 | Build GameSettings singleton pattern | ✅ Done | 1h |
+| 1.4 | Admin view for GameSettings (point multiplier, time window) | ✅ Done | 3h |
+| 1.5 | Admin view for OptionSettings (per-option config) | ✅ Done | 4h |
+| 1.6 | "Reset to Defaults" functionality | ✅ Done | 2h |
+| 1.7 | Manual start/stop game buttons in admin | ✅ Done | 2h |
+| 1.8 | Update Event point calculations to use multiplier | ⏳ In Progress | 2h |
+| 1.9 | Add cooldown checking logic | ⏳ Queued | 3h |
 
 **Deliverable:** Admin can configure all game rules, reset to defaults
+
+**Additions beyond plan:**
+- ✅ GameTimeWindows table for multiple time windows (Morning/Afternoon/etc.)
+- ✅ QR code generation and display in Groups admin
+- ✅ Multiple separate date/time fields for better UX
+- ✅ German rule text defaults for all 9 options
+- ✅ Ransack configurations for all new models
 
 ---
 
@@ -657,12 +665,32 @@ end
 
 ## 10. Notes & Decisions Log
 
-| Date | Decision | Rationale |
-|------|----------|-----------|
-| 2026-01-17 | Use PWA over native app | Same codebase, faster dev, sufficient for needs |
-| 2026-01-17 | Server timestamp for submissions | Ensures fair ordering regardless of client time |
-| 2026-01-17 | Local photo download, not cloud | Cost savings, privacy, simplicity |
-| 2026-01-17 | Admin design last | Focus on functionality first |
+| Date | Decision | Rationale | Status |
+|------|----------|-----------|--------|
+| 2026-01-17 | Use PWA over native app | Same codebase, faster dev, sufficient for needs | ✅ |
+| 2026-01-17 | Server timestamp for submissions | Ensures fair ordering regardless of client time | ✅ |
+| 2026-01-17 | Local photo download, not cloud | Cost savings, privacy, simplicity | ✅ |
+| 2026-01-17 | Admin design last | Focus on functionality first | ✅ |
+| 2026-01-17 | Multiple time windows for game | Flexibility for multi-day events with breaks | ✅ Implemented |
+
+## 11. Implementation Progress
+
+### Completed in Phase 1:
+- ✅ GameSettings model with singleton pattern
+- ✅ GameTimeWindows model for flexible scheduling
+- ✅ OptionSettings model with per-option configuration
+- ✅ Groups.join_token for QR code generation
+- ✅ Admin interface for all settings
+- ✅ Start/Stop/Reset functionality
+- ✅ QR code display in Groups admin
+- ✅ German rule text for all 9 options
+- ✅ Seed data with defaults
+- ✅ Multiple date/time input fields
+
+### Next Steps:
+1. Integrate point_multiplier into Event.calculate_points
+2. Add cooldown validation to Event model
+3. Create PlayerSession model and join flow
 
 ---
 

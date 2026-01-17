@@ -26,6 +26,9 @@ class Event < ApplicationRecord
   # Nested Attributes
   accepts_nested_attributes_for :target, :group
 
+  # Validations
+  validate :check_cooldown_before_create, on: :create
+
   def group_name
     group&.name || "-"
   end
@@ -62,6 +65,10 @@ class Event < ApplicationRecord
     target = Target.find(target_id) if target_id.present?
     target_group = Group.find(target_group_id) if target_group_id.present?
 
+    # Get game settings for multiplier
+    game_settings = GameSetting.instance
+    multiplier = game_settings.point_multiplier || 1.0
+
     if group
       group.points    = (group.points    || 0).to_i
       group.kopfgeld  = (group.kopfgeld  || 0).to_i if group.respond_to?(:kopfgeld)
@@ -79,7 +86,8 @@ class Event < ApplicationRecord
         self.group_points = 0
         self.description = "schon geholt"
       else
-        self.group_points = target.points - target.mines
+        # Apply multiplier to target points
+        self.group_points = (target.points - target.mines) * multiplier
         self.group_points += 100 if target.count == 0
         append_to_description("Bonus geholt") if target.count == 0
         append_to_description("Boom! #{target.mines}") if target.mines != 0
@@ -124,7 +132,7 @@ class Event < ApplicationRecord
         error_triggered = true
       end
       unless error_triggered
-        self.group_points = 400
+        self.group_points = (400 * multiplier).to_i
         if target_group.kopfgeld != 0
           self.group_points += target_group.kopfgeld
           target_group.kopfgeld = 0
@@ -200,7 +208,7 @@ class Event < ApplicationRecord
         self.group_points = 0
         self.target_points = 0
       else
-        self.group_points = 200
+        self.group_points = (200 * multiplier).to_i
         self.target_points = -200
         target_group.points += self.target_points
         append_to_description("Foto von #{@last_foto_got.time.strftime("%H:%M")} bemerkt.")
@@ -227,5 +235,23 @@ class Event < ApplicationRecord
     group.save if group
     target.save if target
     target_group.save if target_group
+  end
+
+  private
+
+  # Validate cooldown before creating event
+  def check_cooldown_before_create
+    return unless group_id.present? && option_id.present?
+
+    checker = CooldownChecker.new(
+      Group.find(group_id),
+      Option.find(option_id),
+      target_group_id.present? ? Group.find(target_group_id) : nil
+    )
+    
+    result = checker.check
+    unless result[:allowed]
+      errors.add(:base, result[:reason])
+    end
   end
 end
