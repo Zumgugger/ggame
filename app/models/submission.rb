@@ -73,6 +73,8 @@ class Submission < ApplicationRecord
 
   # Callbacks
   before_validation :set_submitted_at, on: :create
+  after_create_commit :broadcast_new_submission
+  after_update_commit :broadcast_status_change, if: :saved_change_to_status?
 
   # Verify the submission and create an Event
   def verify!(admin_user, message: nil)
@@ -206,6 +208,62 @@ class Submission < ApplicationRecord
     option_setting = OptionSetting.find_by(option: option)
     if option_setting&.requires_photo? && !photo.attached?
       errors.add(:photo, 'ist für diese Option erforderlich')
+    end
+  end
+
+  # Broadcast new submission to admin queue
+  def broadcast_new_submission
+    ActionCable.server.broadcast("submissions_admin", {
+      type: "new_submission",
+      submission: {
+        id: id,
+        group_name: group.name,
+        option_name: option.name,
+        target_name: target&.name,
+        target_group_name: target_group&.name,
+        player_name: player_session&.player_name,
+        has_photo: photo.attached?,
+        submitted_at: submitted_at.strftime('%H:%M:%S'),
+        waiting_time: waiting_time_text
+      }
+    })
+  end
+
+  # Broadcast status change to player
+  def broadcast_status_change
+    # Notify the specific player session
+    ActionCable.server.broadcast("player_session_#{player_session.session_token}", {
+      type: "submission_update",
+      submission: {
+        id: id,
+        status: status,
+        option_name: option.name,
+        admin_message: admin_message,
+        verified_at: verified_at&.strftime('%H:%M:%S')
+      }
+    })
+
+    # Notify the admin that a submission was processed (for queue update)
+    ActionCable.server.broadcast("submissions_admin", {
+      type: "submission_processed",
+      submission_id: id,
+      status: status
+    })
+
+    # If verified, notify player's group about potential points change
+    if status == 'verified'
+      ActionCable.server.broadcast("player_group_#{group_id}", {
+        type: "points_update",
+        points: group.player_visible_points
+      })
+
+      # Also notify target group if applicable (their points may have changed)
+      if target_group_id.present?
+        ActionCable.server.broadcast("player_group_#{target_group_id}", {
+          type: "points_update",
+          points: target_group.player_visible_points
+        })
+      end
     end
   end
 end

@@ -244,6 +244,14 @@
   </head>
 
   <body>
+    <!-- Player data for JavaScript -->
+    <% if @session %>
+    <div id="player-data" 
+         data-group-id="<%= @session.group&.id %>" 
+         data-session-token="<%= @session.session_token %>"
+         style="display: none;"></div>
+    <% end %>
+    
     <div class="container">
       <%= yield %>
     </div>
@@ -307,5 +315,9 @@
           .catch(err => console.log('SW registration failed:', err));
       }
     </script>
+    
+    <!-- ActionCable for real-time updates -->
+    <%= javascript_include_tag "actioncable", "data-turbo-track": "reload" %>
+    <%= javascript_include_tag "player_realtime", "data-turbo-track": "reload" %>
   </body>
 </html>

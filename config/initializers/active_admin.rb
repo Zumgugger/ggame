@@ -330,7 +330,8 @@ ActiveAdmin.setup do |config|
   # You can add your own content to the site head like analytics. Make sure
   # you only pass content you trust.
   #
-  # config.head = ''.html_safe
+  # Include ActionCable for real-time submissions updates
+  config.head = '<script src="/assets/actioncable.js"></script><script src="/assets/admin_realtime.js"></script>'.html_safe
 
   # == Footer
   #
