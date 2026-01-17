@@ -2,7 +2,7 @@
 
 > **Document Created:** January 17, 2026  
 > **Last Updated:** January 17, 2026
-> **Status:** Phase 1-4 Complete, Phase 5 Next  
+> **Status:** Phase 1-5 Complete, Phase 6 Next  
 > **Estimated Total Effort:** 4-6 weeks
 
 ---
@@ -304,19 +304,27 @@ add_column :events, :queued_behind_id, :bigint, optional: true
 
 ---
 
-### Phase 5: Real-time & Notifications (Week 4)
+### Phase 5: Real-time & Notifications (Week 4) ✅ COMPLETE
 **Goal:** Live updates via ActionCable
 
-| Task | Description | Effort |
-|------|-------------|--------|
-| 5.1 | Set up ActionCable channels | 2h |
-| 5.2 | `SubmissionsChannel` for admin (new submissions appear) | 3h |
-| 5.3 | `PlayerChannel` for players (verification result) | 3h |
-| 5.4 | Admin notification sound/badge for new submissions | 2h |
-| 5.5 | Player notification on verify/deny with admin message | 2h |
-| 5.6 | Auto-refresh target list when events verified | 2h |
+| Task | Description | Status | Effort |
+|------|-------------|--------|--------|
+| 5.1 | Set up ActionCable channels | ✅ Done | 2h |
+| 5.2 | `SubmissionsChannel` for admin (new submissions appear) | ✅ Done | 3h |
+| 5.3 | `PlayerChannel` for players (verification result) | ✅ Done | 3h |
+| 5.4 | Admin notification sound/badge for new submissions | ✅ Done | 2h |
+| 5.5 | Player notification on verify/deny with admin message | ✅ Done | 2h |
+| 5.6 | Auto-refresh target list when events verified | ✅ Done | 2h |
 
-**Deliverable:** Real-time bidirectional updates
+**Additions:**
+- ✅ Hidden points system for photo events (photographed group can't see points drop)
+- ✅ `hidden_until` column on Events for delayed visibility
+- ✅ `player_visible_points` method hides pending deductions
+- ✅ Toast notifications with sound for admin
+- ✅ Title flash and notification badge
+- ✅ Auto-page refresh on new submission
+
+**Deliverable:** Real-time bidirectional updates ✅
 
 ---
 
@@ -747,27 +755,26 @@ end
   - Points input (points_set for Mine/Kopfgeld)
 - ✅ Photo requirements corrected (hat spioniert = no photo)
 
-### Next Steps (Phase 5: Real-time & Notifications):
-1. Set up ActionCable channels
-2. Admin gets live updates when new submissions arrive
-3. Players get notified when submission verified/denied
-4. Auto-refresh UI on state changes
+### Completed in Phase 5:
+- ✅ SubmissionsChannel for admin real-time notifications
+- ✅ PlayerChannel for player updates (group + session streams)
+- ✅ ActionCable JavaScript for admin (toast, sound, title flash)
+- ✅ ActionCable JavaScript for players (notification banner)
+- ✅ Broadcast on submission create and status change
+- ✅ Points update broadcast to affected groups
+- ✅ Hidden points system:
+  - `hidden_until` column on Events
+  - "hat Gruppe fotografiert" hides deduction for 10 min window
+  - "hat Foto bemerkt" reveals the hidden event
+  - `player_visible_points` shows delayed points to players
+  - Admin always sees real points
 
----
-
-*End of Feature Plan*
-- ✅ PlayerSession model with device fingerprinting
-- ✅ /api/player_sessions/join endpoint
-- ✅ Session token generation (SecureRandom.hex)
-- ✅ QR code icons in Control Room homepage
-- ✅ PDF download with group name and QR code (prawn + rqrcode)
-- ✅ qrcodejs library served locally for Docker compatibility
-
-### Next Steps (Phase 2.6-2.9):
-1. Create player-facing join page (scan QR → see group info)
-2. localStorage session persistence
-3. Returning player detection
-4. Player name entry flow
+### Next Steps (Phase 6: Verification Queue Logic):
+1. Add `queued_behind_id` to events for time ordering
+2. Queue detection logic (pending submission blocks newer)
+3. Queue visualization in admin
+4. Auto-process queue when blocking submission verified
+5. Handle denied submission (release queue)
 
 ---
 
