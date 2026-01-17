@@ -35,7 +35,31 @@ ActiveAdmin.register Group do
       row :kopfgeld
       row :false_information
       row :description
+      row :join_token
     end
+    
+    panel "QR Code für Gruppenbeitritt" do
+      div style: "text-align: center; padding: 20px;" do
+        h3 "Scanne diesen QR Code um der Gruppe beizutreten:"
+        div id: "qrcode", style: "margin: 20px auto; display: inline-block;"
+        
+        script do
+          raw %{
+            var qrcode = new QRCode(document.getElementById("qrcode"), {
+              text: "#{request.base_url}/join/#{group.join_token}",
+              width: 256,
+              height: 256
+            });
+          }
+        end
+        
+        div style: "margin-top: 20px;" do
+          strong "Join-Link: "
+          code "#{request.base_url}/join/#{group.join_token}"
+        end
+      end
+    end
+    
     panel "Users in this Group" do
       table_for group.users do
         column :name

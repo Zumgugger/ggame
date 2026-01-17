@@ -9,6 +9,8 @@
 #   end
 # Datenbank mit meist gebrauchten Dingen füllen
 
+# Load option defaults
+require_relative 'seeds/option_settings_defaults'
 
  Option.create([
    { name: "hat Posten geholt", count: 0, active: true },
@@ -21,6 +23,31 @@
    { name: "hat Kopfgeld gesetzt", count: 0, active: true },
    { name: "hat Mine entschärft", count: 0, active: true }
  ])
+
+# Create OptionSettings for each option with defaults
+Option.find_each do |option|
+  next if option.option_setting.present?
+  
+  defaults = OPTION_DEFAULTS[option.name] || {}
+  option.create_option_setting!(
+    requires_photo: defaults[:requires_photo] || false,
+    requires_target: defaults[:requires_target] || false,
+    auto_verify: defaults[:auto_verify] || true,
+    points: defaults[:points] || 0,
+    cost: defaults[:cost] || 0,
+    cooldown_seconds: defaults[:cooldown_seconds] || 0,
+    rule_text: defaults[:rule_text],
+    rule_text_default: defaults[:rule_text],
+    available_to_players: defaults[:available_to_players] || true
+  )
+end
+
+# Create GameSettings singleton
+GameSetting.instance.tap do |settings|
+  settings.save_as_defaults!
+end
+
+puts "✓ Options and settings created!"
 
 
 

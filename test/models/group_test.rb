@@ -4,12 +4,18 @@
 #
 #  id                :bigint           not null, primary key
 #  false_information :boolean
+#  join_token        :string           not null
 #  kopfgeld          :integer
 #  name              :string
+#  name_editable     :boolean          default(TRUE)
 #  points            :integer          default(0)
 #  sort_order        :integer
 #  created_at        :datetime         not null
 #  updated_at        :datetime         not null
+#
+# Indexes
+#
+#  index_groups_on_join_token  (join_token) UNIQUE
 #
 require "test_helper"
 

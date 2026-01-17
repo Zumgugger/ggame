@@ -26,6 +26,11 @@ ActiveAdmin.register_page "Dashboard" do
       link_to "logout", destroy_admin_user_session_path
     end
 
+    panel "update targets" do
+      "docker-compose run --rm app rails console,
+      Target.find_each { |t| t.update(points: ((t.points || 0) * 1.5).to_i) }"
+    end
+
     # Here is an example of a simple dashboard with columns and panels.
     #
     # columns do
