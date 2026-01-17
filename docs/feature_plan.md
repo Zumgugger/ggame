@@ -2,7 +2,7 @@
 
 > **Document Created:** January 17, 2026  
 > **Last Updated:** January 17, 2026
-> **Status:** Phase 1-7 Complete, Phase 8 Next  
+> **Status:** Phase 1-8 Complete, Phase 9 Next  
 > **Estimated Total Effort:** 4-6 weeks
 
 ---
@@ -376,18 +376,18 @@ add_column :events, :queued_behind_id, :bigint, optional: true
 
 ---
 
-### Phase 8: Rules View System (Week 5)
+### Phase 8: Rules View System (Week 5) ✅
 **Goal:** Dynamic rules page
 
-| Task | Description | Effort |
-|------|-------------|--------|
-| 8.1 | Rules page generation from OptionSettings | 2h |
-| 8.2 | In-place editing in admin (contenteditable or AJAX) | 4h |
-| 8.3 | Auto-update when options added/removed | 2h |
-| 8.4 | Auto-update when settings change | 2h |
-| 8.5 | Basic CSS styling for rules page | 2h |
+| Task | Description | Effort | Status |
+|------|-------------|--------|--------|
+| 8.1 | Rules page generation from OptionSettings | 2h | ✅ |
+| 8.2 | In-place editing in admin (contenteditable or AJAX) | 4h | ✅ |
+| 8.3 | Auto-update when options added/removed | 2h | ✅ |
+| 8.4 | Auto-update when settings change | 2h | ✅ |
+| 8.5 | Basic CSS styling for rules page | 2h | ✅ |
 
-**Deliverable:** Rules page always reflects current settings
+**Deliverable:** Rules page always reflects current settings ✅
 
 ---
 
@@ -811,14 +811,28 @@ end
 - ✅ Bulk delete all verified photos with confirmation
 - ✅ Photo statistics sidebar (total count, verified count)
 - ✅ rubyzip gem for ZIP file creation
-- ✅ Filename format: GroupName_Option_Timestamp.ext
+- ✅ Filename format: GroupName_TargetName_originalfilename.ext
 
-### Next Steps (Phase 8: Rules View System):
-1. Rules page generation from OptionSettings (already basic implementation exists)
-2. In-place editing in admin (contenteditable or AJAX)
-3. Auto-update when options added/removed
-4. Auto-update when settings change
-5. Basic CSS styling for rules page
+### Completed in Phase 8:
+- ✅ Admin "📜 Regeln bearbeiten" page for in-place editing all option rule texts
+- ✅ Each option shows settings (points, photo required, auto-verify, cooldown)
+- ✅ Save button per option for AJAX update
+- ✅ Links to reset rule to default and preview player page
+- ✅ Player-facing rules page improved CSS:
+  - Rule cards with shadows and hover effects
+  - Point badges with color coding
+  - Meta items for photo required, cooldown, etc.
+  - Better typography and spacing
+- ✅ Rules auto-update when OptionSettings change (database-driven)
+
+### Next Steps (Phase 9: Security Hardening):
+1. Rate limiting middleware (1 req/10s per session)
+2. Input sanitization for all player inputs
+3. CSRF protection for API endpoints
+4. Session token validation
+5. Prevent group hopping (one device = one group)
+6. SQL injection prevention audit
+7. XSS prevention audit
 
 ---
 
