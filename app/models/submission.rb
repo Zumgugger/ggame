@@ -69,6 +69,9 @@ class Submission < ApplicationRecord
   validate :cooldown_respected, on: :create
   validate :game_must_be_active, on: :create
   validate :photo_required_if_option_requires_photo, on: :create
+  validate :photo_must_be_valid_image, on: :create
+  validate :photo_not_duplicate, on: :create
+  validate :target_not_already_verified, on: :create
 
   # Scopes
   scope :pending, -> { where(status: 'pending') }
@@ -78,6 +81,32 @@ class Submission < ApplicationRecord
   scope :processable, -> { pending.where(queued_behind_id: nil) }
   scope :recent, -> { order(submitted_at: :desc) }
   scope :oldest_first, -> { order(submitted_at: :asc) }
+
+  # Class method to check for duplicate submissions (for confirmation prompt)
+  # Returns existing submission if a duplicate exists, nil otherwise
+  def self.find_duplicate(group_id:, option_id:, target_id: nil, target_group_id: nil)
+    query = where(group_id: group_id, option_id: option_id)
+            .where.not(status: 'denied')
+
+    query = query.where(target_id: target_id) if target_id.present?
+    query = query.where(target_group_id: target_group_id) if target_group_id.present?
+
+    query.first
+  end
+
+  # Class method to get already verified target IDs for a group and option
+  def self.verified_target_ids(group_id:, option_id:)
+    where(group_id: group_id, option_id: option_id, status: 'verified')
+      .pluck(:target_id)
+      .compact
+  end
+
+  # Class method to get already verified target_group IDs for a group and option
+  def self.verified_target_group_ids(group_id:, option_id:)
+    where(group_id: group_id, option_id: option_id, status: 'verified')
+      .pluck(:target_group_id)
+      .compact
+  end
 
   # Callbacks
   before_validation :set_submitted_at, on: :create
@@ -265,6 +294,64 @@ class Submission < ApplicationRecord
     option_setting = OptionSetting.find_by(option: option)
     if option_setting&.requires_photo? && !photo.attached?
       errors.add(:photo, 'ist für diese Option erforderlich')
+    end
+  end
+
+  # Validate photo is a valid image type (JPEG, PNG, HEIC, HEIF, WebP)
+  # Supports iPhone (HEIC/HEIF) and Android (JPEG/PNG/WebP) formats
+  ALLOWED_IMAGE_TYPES = %w[
+    image/jpeg image/jpg image/png image/webp
+    image/heic image/heif image/heic-sequence image/heif-sequence
+  ].freeze
+
+  def photo_must_be_valid_image
+    return unless photo.attached?
+
+    unless ALLOWED_IMAGE_TYPES.include?(photo.content_type)
+      errors.add(:photo, 'muss ein Bild sein (JPEG, PNG, HEIC oder WebP)')
+    end
+
+    # Also check file size (max 20MB for high-res photos)
+    if photo.byte_size > 20.megabytes
+      errors.add(:photo, 'darf maximal 20MB groß sein')
+    end
+  end
+
+  # Prevent duplicate photo uploads (same checksum = same image)
+  def photo_not_duplicate
+    return unless photo.attached?
+    return unless photo.blob&.checksum
+
+    # Find any existing submission with same photo checksum (excluding denied ones which can be resubmitted)
+    existing = Submission.joins(:photo_blob)
+                         .where(group_id: group_id)
+                         .where.not(status: 'denied')
+                         .where(active_storage_blobs: { checksum: photo.blob.checksum })
+                         .where.not(id: id)
+                         .first
+
+    if existing
+      errors.add(:photo, 'wurde bereits eingereicht (gleiches Bild)')
+    end
+  end
+
+  # Prevent submitting for already verified targets (for "hat Posten geholt")
+  def target_not_already_verified
+    return unless option && group && target
+
+    # Only check for "hat Posten geholt" option
+    return unless option.name == 'hat Posten geholt'
+
+    # Check if this target is already verified for this group
+    already_verified = Submission.where(
+      group_id: group_id,
+      option_id: option_id,
+      target_id: target_id,
+      status: 'verified'
+    ).exists?
+
+    if already_verified
+      errors.add(:target, 'wurde bereits erfolgreich eingereicht')
     end
   end
 

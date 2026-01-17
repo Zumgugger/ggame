@@ -49,9 +49,18 @@
       <select name="target_id" id="target_id">
         <option value="">-- Posten wählen --</option>
         <% @posten.each do |posten| %>
-          <option value="<%= posten.id %>"><%= posten.name %></option>
+          <% is_verified = @verified_posten_ids.include?(posten.id) %>
+          <option value="<%= posten.id %>" 
+                  data-verified="<%= is_verified %>"
+                  <%= 'disabled' if is_verified %>
+                  <%= 'class="verified-target"' if is_verified %>>
+            <%= posten.name %><%= ' ✓ (bereits geschafft)' if is_verified %>
+          </option>
         <% end %>
       </select>
+      <p class="hint" id="posten-hint" style="display: none; color: #2ed573; font-size: 0.8rem; margin-top: 0.25rem;">
+        ✓ Bereits verifizierte Posten sind deaktiviert
+      </p>
     </div>
 
     <!-- Points Input (for "hat Mine gesetzt", "hat Kopfgeld gesetzt") -->
@@ -152,6 +161,15 @@
     border-radius: 12px;
     background: #252540;
     color: #fff;
+  }
+
+  .form-group select option:disabled {
+    color: #666;
+    background: #1a1a2e;
+  }
+
+  .form-group select option.verified-target {
+    color: #2ed573;
   }
 
   .form-group select:focus,
@@ -309,6 +327,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const targetGroupSelect = document.getElementById('target_group_id');
   const postenGroupDiv = document.getElementById('posten-group');
   const postenSelect = document.getElementById('target_id');
+  const postenHint = document.getElementById('posten-hint');
   const pointsInputGroup = document.getElementById('points-input-group');
   const pointsInput = document.getElementById('points_set');
   const pointsLabel = document.getElementById('points-label');
@@ -323,6 +342,16 @@ document.addEventListener('DOMContentLoaded', function() {
   const photoWarning = document.getElementById('photo-warning');
   const submitBtn = document.getElementById('submit-btn');
   const statusMessage = document.getElementById('status-message');
+
+  // Existing submissions for duplicate checking
+  const existingSubmissions = <%= raw @existing_submissions.to_json %>;
+  
+  // Allowed image types (matches server-side validation)
+  const allowedImageTypes = [
+    'image/jpeg', 'image/jpg', 'image/png', 'image/webp',
+    'image/heic', 'image/heif', 'image/heic-sequence', 'image/heif-sequence'
+  ];
+  const maxFileSize = 20 * 1024 * 1024; // 20MB
 
   // Detect mobile device
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -350,6 +379,27 @@ document.addEventListener('DOMContentLoaded', function() {
     postenGroupDiv.style.display = requiresPosten ? 'block' : 'none';
     postenSelect.required = requiresPosten;
     if (!requiresPosten) postenSelect.value = '';
+    
+    // Show hint about verified targets only for "hat Posten geholt"
+    if (optionName.includes('Posten geholt')) {
+      postenHint.style.display = 'block';
+      // For "hat Posten geholt", disable already verified targets
+      Array.from(postenSelect.options).forEach(opt => {
+        if (opt.dataset.verified === 'true') {
+          opt.disabled = true;
+        }
+      });
+    } else {
+      postenHint.style.display = 'none';
+      // For other options like "Mine gesetzt", enable all targets
+      Array.from(postenSelect.options).forEach(opt => {
+        opt.disabled = false;
+        // Update display text to remove the checkmark for non-posten-geholt options
+        if (opt.dataset.verified === 'true' && !opt.text.endsWith('(bereits geschafft)')) {
+          // Keep original text
+        }
+      });
+    }
 
     // Show/hide points input (for "hat Mine gesetzt", "hat Kopfgeld gesetzt")
     pointsInputGroup.style.display = requiresPointsInput ? 'block' : 'none';
@@ -379,6 +429,50 @@ document.addEventListener('DOMContentLoaded', function() {
       photoInput.required = false;
     }
   });
+
+  // Check if this submission is a duplicate
+  function checkDuplicate() {
+    const optionId = parseInt(optionSelect.value);
+    const targetId = postenSelect.value ? parseInt(postenSelect.value) : null;
+    const targetGroupId = targetGroupSelect.value ? parseInt(targetGroupSelect.value) : null;
+
+    if (!optionId) return null;
+
+    return existingSubmissions.find(sub => {
+      if (sub.option_id !== optionId) return false;
+      if (targetId && sub.target_id !== targetId) return false;
+      if (targetGroupId && sub.target_group_id !== targetGroupId) return false;
+      // Match if no target specified and submission also has no target
+      if (!targetId && !targetGroupId && sub.target_id === null && sub.target_group_id === null) return true;
+      // Match if target matches
+      if (targetId && sub.target_id === targetId) return true;
+      if (targetGroupId && sub.target_group_id === targetGroupId) return true;
+      return false;
+    });
+  }
+
+  // Validate image file
+  function validateImageFile(file) {
+    if (!file) return { valid: true };
+
+    // Check file type
+    if (!allowedImageTypes.includes(file.type)) {
+      return { 
+        valid: false, 
+        message: 'Ungültiger Dateityp. Erlaubt sind: JPEG, PNG, HEIC, WebP'
+      };
+    }
+
+    // Check file size
+    if (file.size > maxFileSize) {
+      return { 
+        valid: false, 
+        message: 'Datei zu groß. Maximal 20MB erlaubt.'
+      };
+    }
+
+    return { valid: true };
+  }
 
   // Photo capture - mobile uses camera API directly
   photoPreview.addEventListener('click', function() {
@@ -505,14 +599,27 @@ document.addEventListener('DOMContentLoaded', function() {
 
   photoInput.addEventListener('change', function() {
     if (this.files && this.files[0]) {
+      const file = this.files[0];
+      
+      // Validate file
+      const validation = validateImageFile(file);
+      if (!validation.valid) {
+        statusMessage.textContent = '❌ ' + validation.message;
+        statusMessage.className = 'status-message error';
+        statusMessage.style.display = 'block';
+        this.value = ''; // Clear the input
+        return;
+      }
+      
       const reader = new FileReader();
       reader.onload = function(e) {
         previewImage.src = e.target.result;
         previewImage.style.display = 'block';
         photoPlaceholder.style.display = 'none';
         removePhotoBtn.style.display = 'block';
+        statusMessage.style.display = 'none';
       };
-      reader.readAsDataURL(this.files[0]);
+      reader.readAsDataURL(file);
     }
   });
 
@@ -529,6 +636,39 @@ document.addEventListener('DOMContentLoaded', function() {
   // Form submission
   form.addEventListener('submit', async function(e) {
     e.preventDefault();
+    
+    // Validate image file before submission
+    if (photoInput.files && photoInput.files[0]) {
+      const validation = validateImageFile(photoInput.files[0]);
+      if (!validation.valid) {
+        statusMessage.textContent = '❌ ' + validation.message;
+        statusMessage.className = 'status-message error';
+        statusMessage.style.display = 'block';
+        return;
+      }
+    }
+    
+    // Check for duplicate submission and ask for confirmation
+    const duplicate = checkDuplicate();
+    if (duplicate) {
+      const selectedOption = optionSelect.options[optionSelect.selectedIndex];
+      const optionName = selectedOption ? selectedOption.text.split('(')[0].trim() : 'Diese Aktion';
+      
+      let targetName = '';
+      if (postenSelect.value) {
+        const postenOption = postenSelect.options[postenSelect.selectedIndex];
+        targetName = ' auf ' + postenOption.text.split('✓')[0].trim();
+      } else if (targetGroupSelect.value) {
+        const groupOption = targetGroupSelect.options[targetGroupSelect.selectedIndex];
+        targetName = ' für ' + groupOption.text;
+      }
+      
+      const confirmMessage = `⚠️ "${optionName}${targetName}" wurde bereits eingereicht und ist noch ausstehend oder verifiziert.\n\nMöchtest du trotzdem eine weitere Einreichung machen?`;
+      
+      if (!confirm(confirmMessage)) {
+        return; // User cancelled
+      }
+    }
     
     submitBtn.disabled = true;
     submitBtn.textContent = '⏳ Wird gesendet...';
@@ -559,6 +699,7 @@ document.addEventListener('DOMContentLoaded', function() {
         removePhotoBtn.style.display = 'none';
         targetGroupDiv.style.display = 'none';
         postenGroupDiv.style.display = 'none';
+        pointsInputGroup.style.display = 'none';
         
         // Redirect after short delay
         setTimeout(() => {

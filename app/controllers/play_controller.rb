@@ -107,6 +107,15 @@ class PlayController < ApplicationController
     @options = Option.where(active: true).includes(:option_setting).reject(&:automatic_option?)
     @target_groups = Group.where.not(id: @group.id).order(:name)
     @posten = Target.all.order(:name)
+    
+    # Get already verified targets for each option that requires a target
+    posten_option = Option.find_by(name: 'hat Posten geholt')
+    @verified_posten_ids = posten_option ? Submission.verified_target_ids(group_id: @group.id, option_id: posten_option.id) : []
+    
+    # Get existing submissions for duplicate checking (pending or verified, not denied)
+    @existing_submissions = @group.submissions.where.not(status: 'denied').select(:option_id, :target_id, :target_group_id).map do |s|
+      { option_id: s.option_id, target_id: s.target_id, target_group_id: s.target_group_id }
+    end
   end
 
   # POST /play/submit - Process submission
