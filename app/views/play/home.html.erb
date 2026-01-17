@@ -34,6 +34,13 @@
     📸 Aktion einreichen
   </a>
   -->
+  
+  <div style="margin-top: 30px; text-align: center;">
+    <a href="/play/logout" data-method="delete" class="btn btn-danger" style="width: auto; display: inline-block; padding: 10px 20px; font-size: 0.9rem;"
+       onclick="if(!confirm('Wirklich abmelden?')) return false; localStorage.removeItem('ggame_session_token'); localStorage.removeItem('ggame_group_name');">
+      🚪 Abmelden
+    </a>
+  </div>
 </div>
 
 <!-- Bottom Navigation -->

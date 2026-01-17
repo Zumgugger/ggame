@@ -109,7 +109,21 @@
   document.addEventListener('DOMContentLoaded', function() {
     const existingToken = localStorage.getItem('ggame_session_token');
     if (existingToken) {
-      // Could redirect to /play or show "already joined" message
+      // Check if session is still valid
+      fetch('/play/session_status?session_token=' + existingToken)
+        .then(r => r.json())
+        .then(data => {
+          if (data.valid) {
+            // Show "already joined" option
+            const msg = document.getElementById('message');
+            msg.innerHTML = `<div class="alert alert-success">
+              <strong>Du bist bereits in ${data.group_name}</strong><br>
+              <a href="/play" class="btn btn-primary" style="margin-top:10px;">→ Weiter zum Spiel</a>
+            </div>`;
+            msg.style.display = 'block';
+          }
+        })
+        .catch(() => {});
     }
   });
 </script>

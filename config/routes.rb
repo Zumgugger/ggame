@@ -50,6 +50,8 @@ Rails.application.routes.draw do
   get "/play", to: "play#home", as: "play_home"
   get "/play/targets", to: "play#targets", as: "play_targets"
   get "/play/rules", to: "play#rules", as: "play_rules"
+  get "/play/session_status", to: "play#session_status", as: "play_session_status"
+  delete "/play/logout", to: "play#logout", as: "play_logout"
 
   resources :events
   get "/main", controller: "events", action: :main

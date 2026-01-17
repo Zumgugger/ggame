@@ -2,6 +2,10 @@
 class PlayController < ApplicationController
   skip_before_action :authenticate_admin_user!, raise: false
   layout 'player'
+  
+  before_action :check_existing_session, only: [:join]
+  before_action :require_player_session, only: [:home, :targets]
+  before_action :update_activity, only: [:home, :targets, :rules]
 
   # GET /join/:token - QR code landing page
   def join
@@ -10,6 +14,12 @@ class PlayController < ApplicationController
     
     unless @group
       render :invalid_token and return
+    end
+    
+    # Check if this device already has a session for THIS group
+    existing = current_player_session
+    if existing&.group == @group
+      redirect_to play_home_path and return
     end
   end
 
@@ -32,12 +42,19 @@ class PlayController < ApplicationController
     session.player_name = player_name if player_name.present?
     session.generate_session_token if session.new_record?
     
-    # Join group
+    # Join group (allow switching groups if scanning new QR)
     session.group = @group
     session.joined_at = Time.current
     session.last_activity_at = Time.current
     
     if session.save
+      # Set cookie for session persistence
+      cookies[:player_session_token] = {
+        value: session.session_token,
+        expires: 7.days.from_now,
+        httponly: true
+      }
+      
       render json: {
         success: true,
         session_token: session.session_token,
@@ -51,15 +68,10 @@ class PlayController < ApplicationController
 
   # GET /play - Main player home (requires session)
   def home
-    @session = current_player_session
-    unless @session&.group
-      redirect_to root_path, alert: "Bitte zuerst QR-Code scannen"
-      return
-    end
     @group = @session.group
   end
 
-  # GET /play/rules - Rules page
+  # GET /play/rules - Rules page (public, no session required)
   def rules
     @session = current_player_session
     @options = Option.includes(:option_setting).all
@@ -67,18 +79,59 @@ class PlayController < ApplicationController
 
   # GET /play/targets - Target list
   def targets
-    @session = current_player_session
-    unless @session&.group
-      redirect_to root_path, alert: "Bitte zuerst QR-Code scannen"
-      return
-    end
     @group = @session.group
     @targets = Target.all
     @completed_targets = Event.where(group: @group, option: Option.find_by(name: "hat Posten geholt"))
                               .pluck(:target_id)
   end
+  
+  # GET /play/session_status - Check session status (AJAX)
+  def session_status
+    session = current_player_session
+    if session&.group
+      render json: {
+        valid: true,
+        group_name: session.group.name,
+        player_name: session.player_name,
+        points: session.group.points
+      }
+    else
+      render json: { valid: false }
+    end
+  end
+  
+  # DELETE /play/logout - Clear session
+  def logout
+    cookies.delete(:player_session_token)
+    redirect_to root_path, notice: "Abgemeldet"
+  end
 
   private
+  
+  # Redirect to /play if device already has valid session
+  def check_existing_session
+    session = current_player_session
+    if session&.group && session.active?
+      redirect_to play_home_path
+    end
+  end
+  
+  # Require valid session for protected pages
+  def require_player_session
+    @session = current_player_session
+    unless @session&.group
+      respond_to do |format|
+        format.html { redirect_to root_path, alert: "Bitte zuerst QR-Code scannen" }
+        format.json { render json: { error: "Session ungültig" }, status: :unauthorized }
+      end
+    end
+  end
+  
+  # Update last activity timestamp
+  def update_activity
+    session = current_player_session
+    session&.update(last_activity_at: Time.current)
+  end
 
   def generate_device_fingerprint
     # Simple fingerprint from User-Agent + IP (can be enhanced)
