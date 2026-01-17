@@ -34,6 +34,16 @@ Rails.application.routes.draw do
     end
   end
 
+  # API routes for mobile PWA
+  namespace :api do
+    resources :player_sessions, only: [ :create ] do
+      collection do
+        get :join
+        patch :update_activity
+      end
+    end
+  end
+
   resources :events
   get "/main", controller: "events", action: :main
   get "/", controller: "events", action: :main

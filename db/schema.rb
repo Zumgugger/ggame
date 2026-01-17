@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_01_17_110001) do
+ActiveRecord::Schema[7.2].define(version: 2026_01_17_110002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -144,6 +144,20 @@ ActiveRecord::Schema[7.2].define(version: 2026_01_17_110001) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "player_sessions", force: :cascade do |t|
+    t.string "device_fingerprint", null: false
+    t.string "session_token", null: false
+    t.string "player_name"
+    t.bigint "group_id"
+    t.datetime "joined_at"
+    t.datetime "last_activity_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["device_fingerprint"], name: "index_player_sessions_on_device_fingerprint", unique: true
+    t.index ["group_id"], name: "index_player_sessions_on_group_id"
+    t.index ["session_token"], name: "index_player_sessions_on_session_token", unique: true
+  end
+
   create_table "targets", force: :cascade do |t|
     t.string "name"
     t.string "description"
@@ -177,5 +191,6 @@ ActiveRecord::Schema[7.2].define(version: 2026_01_17_110001) do
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "game_time_windows", "game_settings"
   add_foreign_key "option_settings", "options"
+  add_foreign_key "player_sessions", "groups"
   add_foreign_key "users", "groups"
 end
