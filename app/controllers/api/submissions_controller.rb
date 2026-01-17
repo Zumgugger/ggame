@@ -72,7 +72,7 @@ class Api::SubmissionsController < ApplicationController
           name: opt.name,
           requires_target: opt.requires_target?,
           requires_photo: setting&.requires_photo?,
-          points: setting&.base_points || opt.count,
+          points: setting&.points || opt.count,
           rule_text: setting&.rule_text
         }
       end

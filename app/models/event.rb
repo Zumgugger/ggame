@@ -58,8 +58,11 @@ class Event < ApplicationRecord
     [] # If no associations are needed for search, leave it empty
   end
 
-  def calculate_points
-    self.time = Time.now
+  # Calculate points for the event
+  # @param submitted_at [Time, nil] - timestamp from player submission (used when verifying submissions)
+  #                                   Falls back to Time.now for manual control room entries
+  def calculate_points(submitted_at: nil)
+    self.time = submitted_at || Time.now
     self.group_points = 0
     group = Group.find(group_id) if group_id.present?
     target = Target.find(target_id) if target_id.present?

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_01_17_111159) do
+ActiveRecord::Schema[7.2].define(version: 2026_01_17_125728) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -171,12 +171,15 @@ ActiveRecord::Schema[7.2].define(version: 2026_01_17_111159) do
     t.bigint "verified_by_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "target_group_id"
+    t.integer "points_set"
     t.index ["group_id", "option_id", "target_id"], name: "idx_submissions_unique_pending", where: "((status)::text = 'pending'::text)"
     t.index ["group_id"], name: "index_submissions_on_group_id"
     t.index ["option_id"], name: "index_submissions_on_option_id"
     t.index ["player_session_id"], name: "index_submissions_on_player_session_id"
     t.index ["status"], name: "index_submissions_on_status"
     t.index ["submitted_at"], name: "index_submissions_on_submitted_at"
+    t.index ["target_group_id"], name: "index_submissions_on_target_group_id"
     t.index ["target_id"], name: "index_submissions_on_target_id"
     t.index ["verified_by_id"], name: "index_submissions_on_verified_by_id"
   end
@@ -217,6 +220,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_01_17_111159) do
   add_foreign_key "player_sessions", "groups"
   add_foreign_key "submissions", "admin_users", column: "verified_by_id"
   add_foreign_key "submissions", "groups"
+  add_foreign_key "submissions", "groups", column: "target_group_id"
   add_foreign_key "submissions", "options"
   add_foreign_key "submissions", "player_sessions"
   add_foreign_key "submissions", "targets"

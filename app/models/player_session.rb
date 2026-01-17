@@ -31,6 +31,15 @@ class PlayerSession < ApplicationRecord
   validates :device_fingerprint, presence: true, uniqueness: true
   validates :session_token, presence: true, uniqueness: true
 
+  # Ransack search attributes for ActiveAdmin
+  def self.ransackable_attributes(auth_object = nil)
+    %w[id player_name group_id joined_at last_activity_at created_at updated_at]
+  end
+
+  def self.ransackable_associations(auth_object = nil)
+    %w[group submissions]
+  end
+
   # Find or create session from device fingerprint
   def self.find_or_create_from_device(device_fingerprint, player_name = nil)
     session = find_or_initialize_by(device_fingerprint: device_fingerprint) do |s|

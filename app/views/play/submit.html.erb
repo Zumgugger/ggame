@@ -19,26 +19,51 @@
         <% @options.each do |option| %>
           <% setting = option.option_setting %>
           <option value="<%= option.id %>" 
-                  data-requires-target="<%= option.requires_target? %>"
+                  data-requires-target-group="<%= option.requires_target_group? %>"
+                  data-requires-posten="<%= option.requires_posten? %>"
+                  data-requires-points-input="<%= option.requires_points_input? %>"
                   data-requires-photo="<%= setting&.requires_photo? %>">
             <%= option.name %>
-            <% if setting&.base_points %>
-              (<%= setting.base_points %> Pkt.)
+            <% if setting&.points && setting.points > 0 %>
+              (<%= setting.points %> Pkt.)
             <% end %>
           </option>
         <% end %>
       </select>
     </div>
 
-    <!-- Target Selection (shown/hidden based on option) -->
+    <!-- Target Group Selection (for "hat Gruppe fotografiert", etc.) -->
     <div class="form-group target-group" id="target-group" style="display: none;">
-      <label for="target_id">Zielgruppe auswählen *</label>
-      <select name="target_id" id="target_id">
+      <label for="target_group_id">Zielgruppe auswählen *</label>
+      <select name="target_group_id" id="target_group_id">
         <option value="">-- Zielgruppe wählen --</option>
         <% @target_groups.each do |target| %>
           <option value="<%= target.id %>"><%= target.name %></option>
         <% end %>
       </select>
+    </div>
+
+    <!-- Posten/Target Selection (for "hat Posten geholt", "hat Mine gesetzt") -->
+    <div class="form-group posten-group" id="posten-group" style="display: none;">
+      <label for="target_id">Posten auswählen *</label>
+      <select name="target_id" id="target_id">
+        <option value="">-- Posten wählen --</option>
+        <% @posten.each do |posten| %>
+          <option value="<%= posten.id %>"><%= posten.name %></option>
+        <% end %>
+      </select>
+    </div>
+
+    <!-- Points Input (for "hat Mine gesetzt", "hat Kopfgeld gesetzt") -->
+    <div class="form-group points-input-group" id="points-input-group" style="display: none;">
+      <label for="points_set" id="points-label">Punkte eingeben *</label>
+      <input type="number" 
+             name="points_set" 
+             id="points_set" 
+             min="1" 
+             placeholder="Anzahl Punkte"
+             class="form-control">
+      <p class="hint" id="points-hint">Gib die Anzahl der Punkte ein</p>
     </div>
 
     <!-- Photo Capture -->
@@ -48,12 +73,13 @@
       <div class="photo-preview" id="photo-preview">
         <div class="photo-placeholder" id="photo-placeholder">
           <span class="camera-icon">📷</span>
-          <span>Tippe um Foto aufzunehmen</span>
+          <span id="photo-prompt-text">Tippe um Foto aufzunehmen</span>
         </div>
         <img id="preview-image" src="" alt="Vorschau" style="display: none;">
         <button type="button" id="remove-photo" class="btn-remove-photo" style="display: none;">✕</button>
       </div>
       
+      <!-- Camera-only input for mobile (no gallery access) -->
       <input type="file" 
              name="photo" 
              id="photo-input" 
@@ -62,6 +88,9 @@
              style="display: none;">
       
       <p class="photo-hint" id="photo-hint">Foto ist optional für diese Aktion</p>
+      <p class="photo-warning" id="photo-warning" style="display: none; color: #e74c3c; font-size: 0.8rem; margin-top: 0.25rem;">
+        ⚠️ Nur Kamera-Aufnahmen erlaubt (keine Galerie)
+      </p>
     </div>
 
     <!-- Description -->
@@ -114,7 +143,8 @@
   }
 
   .form-group select,
-  .form-group textarea {
+  .form-group textarea,
+  .form-group input[type="number"] {
     width: 100%;
     padding: 1rem;
     font-size: 1rem;
@@ -125,9 +155,16 @@
   }
 
   .form-group select:focus,
-  .form-group textarea:focus {
+  .form-group textarea:focus,
+  .form-group input[type="number"]:focus {
     outline: none;
     border-color: #6c5ce7;
+  }
+
+  .form-group .hint {
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    color: #888;
   }
 
   .photo-preview {
@@ -268,8 +305,14 @@
 document.addEventListener('DOMContentLoaded', function() {
   const form = document.getElementById('submission-form');
   const optionSelect = document.getElementById('option_id');
-  const targetGroup = document.getElementById('target-group');
-  const targetSelect = document.getElementById('target_id');
+  const targetGroupDiv = document.getElementById('target-group');
+  const targetGroupSelect = document.getElementById('target_group_id');
+  const postenGroupDiv = document.getElementById('posten-group');
+  const postenSelect = document.getElementById('target_id');
+  const pointsInputGroup = document.getElementById('points-input-group');
+  const pointsInput = document.getElementById('points_set');
+  const pointsLabel = document.getElementById('points-label');
+  const pointsHint = document.getElementById('points-hint');
   const photoGroup = document.getElementById('photo-group');
   const photoInput = document.getElementById('photo-input');
   const photoPreview = document.getElementById('photo-preview');
@@ -277,18 +320,53 @@ document.addEventListener('DOMContentLoaded', function() {
   const previewImage = document.getElementById('preview-image');
   const removePhotoBtn = document.getElementById('remove-photo');
   const photoHint = document.getElementById('photo-hint');
+  const photoWarning = document.getElementById('photo-warning');
   const submitBtn = document.getElementById('submit-btn');
   const statusMessage = document.getElementById('status-message');
+
+  // Detect mobile device
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  
+  // On mobile: enforce camera-only (prevent gallery uploads)
+  if (isMobile) {
+    photoWarning.style.display = 'block';
+  }
 
   // Option change handler
   optionSelect.addEventListener('change', function() {
     const selected = this.options[this.selectedIndex];
-    const requiresTarget = selected.dataset.requiresTarget === 'true';
+    const requiresTargetGroup = selected.dataset.requiresTargetGroup === 'true';
+    const requiresPosten = selected.dataset.requiresPosten === 'true';
+    const requiresPointsInput = selected.dataset.requiresPointsInput === 'true';
     const requiresPhoto = selected.dataset.requiresPhoto === 'true';
+    const optionName = selected.text.trim();
 
-    // Show/hide target selection
-    targetGroup.style.display = requiresTarget ? 'block' : 'none';
-    targetSelect.required = requiresTarget;
+    // Show/hide target group selection (for "hat Gruppe fotografiert", etc.)
+    targetGroupDiv.style.display = requiresTargetGroup ? 'block' : 'none';
+    targetGroupSelect.required = requiresTargetGroup;
+    if (!requiresTargetGroup) targetGroupSelect.value = '';
+
+    // Show/hide posten selection (for "hat Posten geholt", "hat Mine gesetzt")
+    postenGroupDiv.style.display = requiresPosten ? 'block' : 'none';
+    postenSelect.required = requiresPosten;
+    if (!requiresPosten) postenSelect.value = '';
+
+    // Show/hide points input (for "hat Mine gesetzt", "hat Kopfgeld gesetzt")
+    pointsInputGroup.style.display = requiresPointsInput ? 'block' : 'none';
+    pointsInput.required = requiresPointsInput;
+    if (!requiresPointsInput) pointsInput.value = '';
+    
+    // Update label/hint based on option
+    if (optionName.includes('Mine gesetzt')) {
+      pointsLabel.textContent = 'Mine Punkte eingeben *';
+      pointsHint.textContent = 'Gib die Anzahl der Punkte für diese Mine ein';
+    } else if (optionName.includes('Kopfgeld gesetzt')) {
+      pointsLabel.textContent = 'Kopfgeld Punkte eingeben *';
+      pointsHint.textContent = 'Gib die Anzahl der Punkte für dieses Kopfgeld ein';
+    } else {
+      pointsLabel.textContent = 'Punkte eingeben *';
+      pointsHint.textContent = 'Gib die Anzahl der Punkte ein';
+    }
 
     // Update photo hint
     if (requiresPhoto) {
@@ -302,10 +380,128 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 
-  // Photo capture
+  // Photo capture - mobile uses camera API directly
   photoPreview.addEventListener('click', function() {
-    photoInput.click();
+    if (isMobile && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      // Determine camera facing mode based on selected option
+      const selectedOption = optionSelect.options[optionSelect.selectedIndex];
+      const optionText = selectedOption ? selectedOption.text : '';
+      
+      // "hat Posten geholt" uses selfie cam, others use back camera
+      const useSelfieCamera = optionText.toLowerCase().includes('posten geholt');
+      
+      // Use camera stream for mobile to prevent gallery access
+      openCameraCapture(useSelfieCamera);
+    } else {
+      // Fallback for desktop/testing
+      photoInput.click();
+    }
   });
+
+  // Camera capture modal for mobile
+  // @param useSelfieCamera - true for front camera, false for back camera
+  function openCameraCapture(useSelfieCamera = false) {
+    const facingMode = useSelfieCamera ? 'user' : 'environment';
+    
+    // Create fullscreen camera overlay
+    const overlay = document.createElement('div');
+    overlay.id = 'camera-overlay';
+    overlay.innerHTML = `
+      <div class="camera-container">
+        <video id="camera-stream" autoplay playsinline></video>
+        <div class="camera-controls">
+          <button type="button" id="cancel-capture" class="btn-camera-cancel">✕ Abbrechen</button>
+          <button type="button" id="take-photo" class="btn-camera-capture">📷</button>
+        </div>
+      </div>
+      <canvas id="photo-canvas" style="display: none;"></canvas>
+    `;
+    overlay.style.cssText = `
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: #000; z-index: 9999; display: flex;
+      flex-direction: column; align-items: center; justify-content: center;
+    `;
+    document.body.appendChild(overlay);
+
+    const video = document.getElementById('camera-stream');
+    const canvas = document.getElementById('photo-canvas');
+    const takePhotoBtn = document.getElementById('take-photo');
+    const cancelBtn = document.getElementById('cancel-capture');
+
+    // Style camera controls
+    const controls = overlay.querySelector('.camera-controls');
+    controls.style.cssText = `
+      position: absolute; bottom: 30px; left: 0; right: 0;
+      display: flex; justify-content: center; gap: 30px; padding: 20px;
+    `;
+    
+    takePhotoBtn.style.cssText = `
+      width: 70px; height: 70px; border-radius: 50%; border: 4px solid white;
+      background: rgba(255,255,255,0.3); font-size: 24px; cursor: pointer;
+    `;
+    
+    cancelBtn.style.cssText = `
+      padding: 15px 25px; border-radius: 25px; border: none;
+      background: rgba(255,0,0,0.7); color: white; font-size: 16px; cursor: pointer;
+    `;
+
+    video.style.cssText = `
+      max-width: 100%; max-height: 80vh; object-fit: contain;
+      ${useSelfieCamera ? 'transform: scaleX(-1);' : ''}
+    `;
+
+    // Start camera with appropriate facing mode
+    navigator.mediaDevices.getUserMedia({ 
+      video: { facingMode: facingMode, width: { ideal: 1920 }, height: { ideal: 1080 } },
+      audio: false 
+    })
+    .then(stream => {
+      video.srcObject = stream;
+      
+      takePhotoBtn.addEventListener('click', function() {
+        // Capture frame from video
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        
+        const ctx = canvas.getContext('2d');
+        // Mirror the image for selfie camera
+        if (useSelfieCamera) {
+          ctx.translate(canvas.width, 0);
+          ctx.scale(-1, 1);
+        }
+        ctx.drawImage(video, 0, 0);
+        
+        // Convert to blob and set as file input
+        canvas.toBlob(function(blob) {
+          const file = new File([blob], 'camera_photo.jpg', { type: 'image/jpeg' });
+          const dataTransfer = new DataTransfer();
+          dataTransfer.items.add(file);
+          photoInput.files = dataTransfer.files;
+          
+          // Show preview
+          previewImage.src = canvas.toDataURL('image/jpeg');
+          previewImage.style.display = 'block';
+          photoPlaceholder.style.display = 'none';
+          removePhotoBtn.style.display = 'block';
+          
+          // Stop camera and close overlay
+          stream.getTracks().forEach(track => track.stop());
+          overlay.remove();
+        }, 'image/jpeg', 0.9);
+      });
+      
+      cancelBtn.addEventListener('click', function() {
+        stream.getTracks().forEach(track => track.stop());
+        overlay.remove();
+      });
+    })
+    .catch(err => {
+      console.error('Camera error:', err);
+      overlay.remove();
+      // Fallback to file input if camera access denied
+      alert('Kamera-Zugriff verweigert. Bitte erlaube Kamera-Zugriff in den Browser-Einstellungen.');
+    });
+  }
 
   photoInput.addEventListener('change', function() {
     if (this.files && this.files[0]) {
@@ -361,7 +557,8 @@ document.addEventListener('DOMContentLoaded', function() {
         previewImage.style.display = 'none';
         photoPlaceholder.style.display = 'flex';
         removePhotoBtn.style.display = 'none';
-        targetGroup.style.display = 'none';
+        targetGroupDiv.style.display = 'none';
+        postenGroupDiv.style.display = 'none';
         
         // Redirect after short delay
         setTimeout(() => {

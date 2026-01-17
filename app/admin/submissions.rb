@@ -4,6 +4,9 @@ ActiveAdmin.register Submission do
   # Permit parameters
   permit_params :status, :admin_message
 
+  # Disable all batch actions to avoid issues
+  config.batch_actions = false
+
   # Filters
   filter :group
   filter :option
@@ -40,30 +43,8 @@ ActiveAdmin.register Submission do
     end
   end
 
-  # Batch actions
-  batch_action :verify_all do |ids|
-    verified_count = 0
-    Submission.where(id: ids, status: 'pending').each do |submission|
-      if submission.verify!(current_admin_user, message: 'Batch-Verifikation')
-        verified_count += 1
-      end
-    end
-    redirect_to admin_submissions_path, notice: "#{verified_count} Einreichungen bestätigt!"
-  end
-
-  batch_action :deny_all do |ids|
-    denied_count = 0
-    Submission.where(id: ids, status: 'pending').each do |submission|
-      if submission.deny!(current_admin_user, message: 'Batch-Ablehnung')
-        denied_count += 1
-      end
-    end
-    redirect_to admin_submissions_path, notice: "#{denied_count} Einreichungen abgelehnt!"
-  end
-
   # Index view - verification queue
   index do
-    selectable_column
     id_column
     
     column :status do |submission|
@@ -79,7 +60,11 @@ ActiveAdmin.register Submission do
     
     column :group
     column :option
-    column :target
+    column "Posten", :target
+    column "Zielgruppe", :target_group
+    column "Punkte", :points_set do |submission|
+      submission.points_set if submission.points_set.present?
+    end
     
     column "Spieler", :player_session do |submission|
       submission.player_session&.player_name || '-'
@@ -212,7 +197,7 @@ ActiveAdmin.register Submission do
   # Controller customizations
   controller do
     def scoped_collection
-      super.includes(:group, :option, :target, :player_session, :verified_by)
+      super.includes(:group, :option, :target, :target_group, :player_session, :verified_by)
     end
   end
 end

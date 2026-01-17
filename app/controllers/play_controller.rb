@@ -103,8 +103,10 @@ class PlayController < ApplicationController
   # GET /play/submit - Submission form
   def submit
     @group = @session.group
-    @options = Option.where(active: true).includes(:option_setting)
+    # Exclude automatic options (like "hat Kopfgeld eingelöst" which is triggered automatically)
+    @options = Option.where(active: true).includes(:option_setting).reject(&:automatic_option?)
     @target_groups = Group.where.not(id: @group.id).order(:name)
+    @posten = Target.all.order(:name)
   end
 
   # POST /play/submit - Process submission
@@ -119,7 +121,9 @@ class PlayController < ApplicationController
       group: @session.group,
       player_session: @session,
       option_id: params[:option_id],
-      target_id: params[:target_id].presence,
+      target_id: params[:target_id].presence,           # Posten (Target)
+      target_group_id: params[:target_group_id].presence, # Target Group
+      points_set: params[:points_set].presence,         # Points for Mine/Kopfgeld
       description: params[:description]
     )
 

@@ -3,18 +3,41 @@
 # Table name: submissions
 #
 #  id                :bigint           not null, primary key
-#  group_id          :bigint           not null
-#  option_id         :bigint           not null
-#  target_id         :bigint
-#  player_session_id :bigint           not null
-#  status            :string           default("pending"), not null
-#  description       :text
 #  admin_message     :text
+#  description       :text
+#  points_set        :integer
+#  status            :string           default("pending"), not null
 #  submitted_at      :datetime         not null
 #  verified_at       :datetime
-#  verified_by_id    :bigint
 #  created_at        :datetime         not null
 #  updated_at        :datetime         not null
+#  group_id          :bigint           not null
+#  option_id         :bigint           not null
+#  player_session_id :bigint           not null
+#  target_group_id   :bigint
+#  target_id         :bigint
+#  verified_by_id    :bigint
+#
+# Indexes
+#
+#  idx_submissions_unique_pending          (group_id,option_id,target_id) WHERE ((status)::text = 'pending'::text)
+#  index_submissions_on_group_id           (group_id)
+#  index_submissions_on_option_id          (option_id)
+#  index_submissions_on_player_session_id  (player_session_id)
+#  index_submissions_on_status             (status)
+#  index_submissions_on_submitted_at       (submitted_at)
+#  index_submissions_on_target_group_id    (target_group_id)
+#  index_submissions_on_target_id          (target_id)
+#  index_submissions_on_verified_by_id     (verified_by_id)
+#
+# Foreign Keys
+#
+#  fk_rails_...  (group_id => groups.id)
+#  fk_rails_...  (option_id => options.id)
+#  fk_rails_...  (player_session_id => player_sessions.id)
+#  fk_rails_...  (target_group_id => groups.id)
+#  fk_rails_...  (target_id => targets.id)
+#  fk_rails_...  (verified_by_id => admin_users.id)
 #
 class Submission < ApplicationRecord
   # Status constants
@@ -23,7 +46,8 @@ class Submission < ApplicationRecord
   # Associations
   belongs_to :group
   belongs_to :option
-  belongs_to :target, optional: true
+  belongs_to :target, optional: true                    # Posten (from targets table)
+  belongs_to :target_group, class_name: 'Group', optional: true  # Target group (for group actions)
   belongs_to :player_session
   belongs_to :verified_by, class_name: 'AdminUser', optional: true
 
@@ -33,7 +57,9 @@ class Submission < ApplicationRecord
   # Validations
   validates :status, presence: true, inclusion: { in: STATUSES }
   validates :submitted_at, presence: true
-  validates :target, presence: true, if: :requires_target?
+  validates :target, presence: true, if: :requires_posten?
+  validates :target_group, presence: true, if: :requires_target_group?
+  validates :points_set, presence: true, numericality: { greater_than: 0 }, if: :requires_points_input?
   validate :cooldown_respected, on: :create
   validate :game_must_be_active, on: :create
   validate :photo_required_if_option_requires_photo, on: :create
@@ -53,12 +79,18 @@ class Submission < ApplicationRecord
     return false if status != 'pending'
 
     transaction do
-      # Create the Event
-      event = Event.create!(
+      # Create the Event with correct target types
+      event = Event.new(
         group: group,
         option: option,
-        target: target
+        target: target,                # Posten (from targets table)
+        target_group: target_group,    # Target group (for group actions like "hat Gruppe fotografiert")
+        points_set: points_set         # Points for Mine/Kopfgeld
       )
+      
+      # Calculate points and set timestamp from submission time (not verification time)
+      event.calculate_points(submitted_at: submitted_at)
+      event.save!
 
       # Update submission
       update!(
@@ -87,7 +119,22 @@ class Submission < ApplicationRecord
     )
   end
 
-  # Check if this option requires a target
+  # Check if this option requires a Posten (Target)
+  def requires_posten?
+    option&.requires_posten?
+  end
+
+  # Check if this option requires a target group
+  def requires_target_group?
+    option&.requires_target_group?
+  end
+
+  # Check if this option requires points input (Mine/Kopfgeld)
+  def requires_points_input?
+    option&.requires_points_input?
+  end
+
+  # Legacy method
   def requires_target?
     option&.requires_target?
   end
@@ -96,6 +143,7 @@ class Submission < ApplicationRecord
   def display_name
     parts = [group.name, option.name]
     parts << target.name if target.present?
+    parts << target_group.name if target_group.present?
     parts.join(' → ')
   end
 
@@ -121,12 +169,12 @@ class Submission < ApplicationRecord
 
   # Ransackable attributes for ActiveAdmin search
   def self.ransackable_attributes(auth_object = nil)
-    %w[id group_id option_id target_id player_session_id status description admin_message 
+    %w[id group_id option_id target_id target_group_id player_session_id status description admin_message 
        submitted_at verified_at verified_by_id created_at updated_at]
   end
 
   def self.ransackable_associations(auth_object = nil)
-    %w[group option target player_session verified_by photo_attachment photo_blob]
+    %w[group option target target_group player_session verified_by photo_attachment photo_blob]
   end
 
   private
@@ -138,10 +186,10 @@ class Submission < ApplicationRecord
   def cooldown_respected
     return unless option && group
 
-    checker = CooldownChecker.new(option, group, target)
-    unless checker.can_submit?
-      remaining = checker.remaining_cooldown_minutes
-      errors.add(:base, "Cooldown aktiv. Noch #{remaining} Minuten warten.")
+    checker = CooldownChecker.new(group, option, target)
+    result = checker.check
+    unless result[:allowed]
+      errors.add(:base, result[:reason] || "Cooldown aktiv.")
     end
   end
 
