@@ -281,16 +281,22 @@ ActiveAdmin.register Submission do
             image_tag rails_blob_path(submission.photo, disposition: :inline), 
                       style: 'max-width: 100%; max-height: 500px; border-radius: 8px;'
           end
-          div style: 'margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;' do
-            link_to '📷 Foto öffnen', rails_blob_path(submission.photo, disposition: :inline), 
-                    target: '_blank', class: 'button'
-            link_to '⬇️ Herunterladen', download_photo_admin_submission_path(submission), 
-                    class: 'button'
-            link_to '🗑️ Löschen', delete_photo_admin_submission_path(submission),
-                    method: :delete,
-                    class: 'button',
-                    style: 'background-color: #d9534f;',
-                    data: { confirm: 'Foto wirklich löschen? Dies kann nicht rückgängig gemacht werden.' }
+          div style: 'margin-top: 15px;' do
+            span do
+              link_to '📷 Foto öffnen', rails_blob_path(submission.photo, disposition: :inline), 
+                      target: '_blank', class: 'button', style: 'margin-right: 10px;'
+            end
+            span do
+              link_to '⬇️ Herunterladen', download_photo_admin_submission_path(submission), 
+                      class: 'button', style: 'margin-right: 10px;'
+            end
+            span do
+              link_to '🗑️ Löschen', delete_photo_admin_submission_path(submission),
+                      method: :delete,
+                      class: 'button',
+                      style: 'background-color: #d9534f;',
+                      data: { confirm: 'Foto wirklich löschen? Dies kann nicht rückgängig gemacht werden.' }
+            end
           end
         else
           "Kein Foto"
@@ -335,14 +341,18 @@ ActiveAdmin.register Submission do
     # Photo management panel for verified submissions with photos
     if resource.photo.attached?
       panel "Foto-Verwaltung" do
-        div style: 'display: flex; gap: 15px; align-items: center;' do
-          link_to '⬇️ Foto herunterladen', download_photo_admin_submission_path(resource), 
-                  class: 'button', style: 'background-color: #5cb85c;'
-          link_to '🗑️ Foto löschen', delete_photo_admin_submission_path(resource),
-                  method: :delete,
-                  class: 'button',
-                  style: 'background-color: #d9534f;',
-                  data: { confirm: 'Foto wirklich löschen? Dies kann nicht rückgängig gemacht werden.' }
+        div do
+          span do
+            link_to '⬇️ Foto herunterladen', download_photo_admin_submission_path(resource), 
+                    class: 'button', style: 'background-color: #5cb85c; margin-right: 15px;'
+          end
+          span do
+            link_to '🗑️ Foto löschen', delete_photo_admin_submission_path(resource),
+                    method: :delete,
+                    class: 'button',
+                    style: 'background-color: #d9534f;',
+                    data: { confirm: 'Foto wirklich löschen? Dies kann nicht rückgängig gemacht werden.' }
+          end
         end
         para style: 'margin-top: 10px; color: #888; font-size: 12px;' do
           "Dateiname: #{resource.photo_filename}"

@@ -9,41 +9,111 @@
     <% setting = option.option_setting %>
     <% next unless setting&.available_to_players %>
     
-    <div class="card">
-      <h3 style="font-size: 1rem; color: #4CAF50; margin-bottom: 10px;">
-        <%= option.name %>
-      </h3>
+    <div class="rule-card">
+      <div class="rule-header">
+        <h3><%= option.name %></h3>
+        <% if setting&.points&.positive? %>
+          <span class="rule-badge positive">+<%= setting.points %> P</span>
+        <% end %>
+        <% if setting&.cost&.positive? %>
+          <span class="rule-badge negative">-<%= setting.cost %> P</span>
+        <% end %>
+      </div>
       
       <% if setting&.rule_text.present? %>
-        <p style="color: rgba(255,255,255,0.8); font-size: 0.9rem; line-height: 1.5;">
-          <%= setting.rule_text %>
-        </p>
+        <p class="rule-text"><%= setting.rule_text %></p>
       <% else %>
-        <p style="color: rgba(255,255,255,0.5); font-size: 0.9rem; font-style: italic;">
-          Keine Beschreibung verfügbar.
-        </p>
+        <p class="rule-text empty">Keine Beschreibung verfügbar.</p>
       <% end %>
       
-      <div style="margin-top: 10px; font-size: 0.8rem; color: rgba(255,255,255,0.5);">
-        <% if setting&.cost&.positive? %>
-          <span style="margin-right: 10px;">💰 Kosten: <%= setting.cost %> Punkte</span>
+      <div class="rule-meta">
+        <% if setting&.requires_photo %>
+          <span class="meta-item">📷 Foto nötig</span>
         <% end %>
-        <% if setting&.points&.positive? %>
-          <span style="margin-right: 10px;">⭐ Punkte: +<%= setting.points %></span>
+        <% if setting&.requires_target %>
+          <span class="meta-item">🎯 Posten wählen</span>
         <% end %>
         <% if setting&.cooldown_seconds&.positive? %>
-          <span>⏱️ Cooldown: <%= setting.cooldown_minutes %> Min</span>
+          <span class="meta-item">⏱️ <%= setting.cooldown_minutes %> Min Cooldown</span>
         <% end %>
       </div>
     </div>
   <% end %>
   
-  <% if @options.empty? %>
+  <% if @options.select { |o| o.option_setting&.available_to_players }.empty? %>
     <div class="card" style="text-align: center; color: rgba(255,255,255,0.5);">
       <p>Keine Regeln verfügbar.</p>
     </div>
   <% end %>
 </div>
+
+<style>
+  .rule-card {
+    background: rgba(255,255,255,0.05);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    border-left: 4px solid #4CAF50;
+  }
+  
+  .rule-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+  
+  .rule-header h3 {
+    font-size: 1rem;
+    color: #4CAF50;
+    margin: 0;
+    flex-grow: 1;
+  }
+  
+  .rule-badge {
+    font-size: 0.75rem;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-weight: bold;
+  }
+  
+  .rule-badge.positive {
+    background: rgba(76, 175, 80, 0.2);
+    color: #4CAF50;
+  }
+  
+  .rule-badge.negative {
+    background: rgba(244, 67, 54, 0.2);
+    color: #f44336;
+  }
+  
+  .rule-text {
+    color: rgba(255,255,255,0.85);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin: 0 0 12px 0;
+  }
+  
+  .rule-text.empty {
+    color: rgba(255,255,255,0.4);
+    font-style: italic;
+  }
+  
+  .rule-meta {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  
+  .meta-item {
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.5);
+    background: rgba(255,255,255,0.05);
+    padding: 4px 8px;
+    border-radius: 4px;
+  }
+</style>
 
 <!-- Bottom Navigation -->
 <nav class="nav-menu">

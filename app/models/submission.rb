@@ -205,13 +205,25 @@ class Submission < ApplicationRecord
   def photo_filename
     return nil unless photo.attached?
     
-    # Format: GroupName_Option_Timestamp.ext
-    timestamp = submitted_at.strftime('%Y%m%d_%H%M%S')
-    group_name = group.name.gsub(/[^a-zA-Z0-9äöüÄÖÜß]/, '_').truncate(20, omission: '')
-    option_name = option.name.gsub(/[^a-zA-Z0-9äöüÄÖÜß]/, '_').truncate(20, omission: '')
+    # Clean group name (remove spaces and special chars)
+    group_name = group.name.gsub(/[^a-zA-Z0-9äöüÄÖÜß]/, '').truncate(20, omission: '')
+    
+    # Get target name based on option type
+    target_name = case option.name
+    when "hat Posten geholt"
+      target&.name&.gsub(/[^a-zA-Z0-9äöüÄÖÜß]/, '') || 'Posten'
+    when "hat Gruppe fotografiert"
+      target_group&.name&.gsub(/[^a-zA-Z0-9äöüÄÖÜß]/, '') || 'Gruppe'
+    else
+      option.name.gsub(/[^a-zA-Z0-9äöüÄÖÜß]/, '_').truncate(15, omission: '')
+    end
+    
+    # Get original filename without extension
+    original_name = photo.filename.base
     extension = photo.filename.extension_with_delimiter
     
-    "#{group_name}_#{option_name}_#{timestamp}#{extension}"
+    # Format: gruppe3_Posten22_originalfilename.png
+    "#{group_name}_#{target_name}_#{original_name}#{extension}"
   end
 
   # Ransackable attributes for ActiveAdmin search
