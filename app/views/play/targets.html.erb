@@ -1,0 +1,55 @@
+<% content_for(:title) { "Posten - GGame" } %>
+
+<div class="header">
+  <h1>🎯 Posten</h1>
+  <div class="group-name"><%= @group.name %></div>
+</div>
+
+<div class="content">
+  <div class="card">
+    <p style="color: rgba(255,255,255,0.7); margin-bottom: 10px;">
+      <strong><%= @completed_targets.size %></strong> von <strong><%= @targets.size %></strong> Posten geholt
+    </p>
+  </div>
+
+  <% @targets.each do |target| %>
+    <% completed = @completed_targets.include?(target.id) %>
+    <div class="card" style="<%= 'opacity: 0.5;' if completed %>">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <h3 style="font-size: 1rem; <%= 'text-decoration: line-through;' if completed %>">
+            <%= completed ? '✅' : '⬜' %> <%= target.name %>
+          </h3>
+          <p style="color: rgba(255,255,255,0.5); font-size: 0.85rem; margin-top: 5px;">
+            <%= target.points %> Punkte
+          </p>
+        </div>
+        <% if completed %>
+          <span style="color: #4CAF50; font-size: 0.8rem;">Erledigt</span>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+  
+  <% if @targets.empty? %>
+    <div class="card" style="text-align: center; color: rgba(255,255,255,0.5);">
+      <p>Keine Posten verfügbar.</p>
+    </div>
+  <% end %>
+</div>
+
+<!-- Bottom Navigation -->
+<nav class="nav-menu">
+  <a href="/play" class="nav-item">
+    <span class="icon">🏠</span>
+    <span>Home</span>
+  </a>
+  <a href="/play/targets" class="nav-item active">
+    <span class="icon">🎯</span>
+    <span>Posten</span>
+  </a>
+  <a href="/play/rules" class="nav-item">
+    <span class="icon">📜</span>
+    <span>Regeln</span>
+  </a>
+</nav>

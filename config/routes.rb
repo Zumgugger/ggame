@@ -44,6 +44,13 @@ Rails.application.routes.draw do
     end
   end
 
+  # Player PWA routes
+  get "/join/:token", to: "play#join", as: "join_group"
+  post "/join/:token", to: "play#process_join"
+  get "/play", to: "play#home", as: "play_home"
+  get "/play/targets", to: "play#targets", as: "play_targets"
+  get "/play/rules", to: "play#rules", as: "play_rules"
+
   resources :events
   get "/main", controller: "events", action: :main
   get "/groups/:id/qr_pdf", to: "events#group_qr_pdf", as: "group_qr_pdf"

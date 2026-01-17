@@ -1,0 +1,62 @@
+<% content_for(:title) { "Spielregeln - GGame" } %>
+
+<div class="header">
+  <h1>📜 Spielregeln</h1>
+</div>
+
+<div class="content">
+  <% @options.each do |option| %>
+    <% setting = option.option_setting %>
+    <% next unless setting&.available_to_players %>
+    
+    <div class="card">
+      <h3 style="font-size: 1rem; color: #4CAF50; margin-bottom: 10px;">
+        <%= option.name %>
+      </h3>
+      
+      <% if setting&.rule_text.present? %>
+        <p style="color: rgba(255,255,255,0.8); font-size: 0.9rem; line-height: 1.5;">
+          <%= setting.rule_text %>
+        </p>
+      <% else %>
+        <p style="color: rgba(255,255,255,0.5); font-size: 0.9rem; font-style: italic;">
+          Keine Beschreibung verfügbar.
+        </p>
+      <% end %>
+      
+      <div style="margin-top: 10px; font-size: 0.8rem; color: rgba(255,255,255,0.5);">
+        <% if setting&.cost&.positive? %>
+          <span style="margin-right: 10px;">💰 Kosten: <%= setting.cost %> Punkte</span>
+        <% end %>
+        <% if setting&.points&.positive? %>
+          <span style="margin-right: 10px;">⭐ Punkte: +<%= setting.points %></span>
+        <% end %>
+        <% if setting&.cooldown_seconds&.positive? %>
+          <span>⏱️ Cooldown: <%= setting.cooldown_minutes %> Min</span>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+  
+  <% if @options.empty? %>
+    <div class="card" style="text-align: center; color: rgba(255,255,255,0.5);">
+      <p>Keine Regeln verfügbar.</p>
+    </div>
+  <% end %>
+</div>
+
+<!-- Bottom Navigation -->
+<nav class="nav-menu">
+  <a href="/play" class="nav-item">
+    <span class="icon">🏠</span>
+    <span>Home</span>
+  </a>
+  <a href="/play/targets" class="nav-item">
+    <span class="icon">🎯</span>
+    <span>Posten</span>
+  </a>
+  <a href="/play/rules" class="nav-item active">
+    <span class="icon">📜</span>
+    <span>Regeln</span>
+  </a>
+</nav>

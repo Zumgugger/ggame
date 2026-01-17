@@ -2,7 +2,7 @@
 
 > **Document Created:** January 17, 2026  
 > **Last Updated:** January 17, 2026
-> **Status:** Phase 1 Complete - Proceeding to Phase 1.8-1.9 (Point Multiplier & Cooldowns)  
+> **Status:** Phase 1 Complete, Phase 2 In Progress  
 > **Estimated Total Effort:** 4-6 weeks
 
 ---
@@ -199,7 +199,7 @@ add_column :events, :queued_behind_id, :bigint, optional: true
 
 ## 4. Implementation Phases
 
-### Phase 1: Foundation & Settings (Week 1) ✅ MOSTLY COMPLETE
+### Phase 1: Foundation & Settings (Week 1) ✅ COMPLETE
 **Goal:** Core settings infrastructure
 
 | Task | Description | Status | Effort |
@@ -211,10 +211,10 @@ add_column :events, :queued_behind_id, :bigint, optional: true
 | 1.5 | Admin view for OptionSettings (per-option config) | ✅ Done | 4h |
 | 1.6 | "Reset to Defaults" functionality | ✅ Done | 2h |
 | 1.7 | Manual start/stop game buttons in admin | ✅ Done | 2h |
-| 1.8 | Update Event point calculations to use multiplier | ⏳ In Progress | 2h |
-| 1.9 | Add cooldown checking logic | ⏳ Queued | 3h |
+| 1.8 | Update Event point calculations to use multiplier | ✅ Done | 2h |
+| 1.9 | Add cooldown checking logic | ✅ Done | 3h |
 
-**Deliverable:** Admin can configure all game rules, reset to defaults
+**Deliverable:** Admin can configure all game rules, reset to defaults ✅
 
 **Additions beyond plan:**
 - ✅ GameTimeWindows table for multiple time windows (Morning/Afternoon/etc.)
@@ -222,23 +222,28 @@ add_column :events, :queued_behind_id, :bigint, optional: true
 - ✅ Multiple separate date/time fields for better UX
 - ✅ German rule text defaults for all 9 options
 - ✅ Ransack configurations for all new models
+- ✅ CooldownChecker service with per-target-group cooldowns
 
 ---
 
-### Phase 2: Player Session & QR System (Week 2)
+### Phase 2: Player Session & QR System (Week 2) ⏳ IN PROGRESS
 **Goal:** QR code group assignment
 
-| Task | Description | Effort |
-|------|-------------|--------|
-| 2.1 | Add `join_token` to Groups migration | 1h |
-| 2.2 | Create `player_sessions` migration & model | 2h |
-| 2.3 | QR code generation (using `rqrcode` gem) | 2h |
-| 2.4 | Display QR codes in admin Group view | 2h |
-| 2.5 | Create `/join/:token` endpoint | 2h |
-| 2.6 | Session token generation & storage (localStorage) | 3h |
-| 2.7 | Device fingerprinting (basic) | 2h |
-| 2.8 | Group name entry flow (if not set) | 2h |
-| 2.9 | Returning player detection (same token = same group) | 2h |
+| Task | Description | Status | Effort |
+|------|-------------|--------|--------|
+| 2.1 | Add `join_token` to Groups migration | ✅ Done | 1h |
+| 2.2 | Create `player_sessions` migration & model | ✅ Done | 2h |
+| 2.3 | QR code generation (using `rqrcode` gem) | ✅ Done | 2h |
+| 2.4 | Display QR codes in admin Group view | ✅ Done | 2h |
+| 2.5 | Create `/join/:token` endpoint | ✅ Done | 2h |
+| 2.6 | Session token generation & storage (localStorage) | ⏳ Next | 3h |
+| 2.7 | Device fingerprinting (basic) | ⏳ Queued | 2h |
+| 2.8 | Group name entry flow (if not set) | ⏳ Queued | 2h |
+| 2.9 | Returning player detection (same token = same group) | ⏳ Queued | 2h |
+
+**Additions:**
+- ✅ QR code icons in Control Room (📱 show, ⬇️ PDF download)
+- ✅ qrcodejs library served locally for Docker deployment
 
 **Deliverable:** Players can scan QR, get assigned to group, session persists
 
@@ -686,11 +691,22 @@ end
 - ✅ German rule text for all 9 options
 - ✅ Seed data with defaults
 - ✅ Multiple date/time input fields
+- ✅ Point multiplier integration in Event.calculate_points
+- ✅ CooldownChecker service with per-target-group cooldowns
 
-### Next Steps:
-1. Integrate point_multiplier into Event.calculate_points
-2. Add cooldown validation to Event model
-3. Create PlayerSession model and join flow
+### Completed in Phase 2 (so far):
+- ✅ PlayerSession model with device fingerprinting
+- ✅ /api/player_sessions/join endpoint
+- ✅ Session token generation (SecureRandom.hex)
+- ✅ QR code icons in Control Room homepage
+- ✅ PDF download with group name and QR code (prawn + rqrcode)
+- ✅ qrcodejs library served locally for Docker compatibility
+
+### Next Steps (Phase 2.6-2.9):
+1. Create player-facing join page (scan QR → see group info)
+2. localStorage session persistence
+3. Returning player detection
+4. Player name entry flow
 
 ---
 

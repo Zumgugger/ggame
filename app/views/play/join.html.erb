@@ -1,0 +1,115 @@
+<% content_for(:title) { "Gruppe beitreten - GGame" } %>
+
+<div class="header">
+  <h1>🎮 GGame</h1>
+</div>
+
+<div class="content">
+  <div class="card">
+    <h2>Gruppe beitreten</h2>
+    <p style="margin-bottom: 15px; color: rgba(255,255,255,0.7);">
+      Du trittst der Gruppe <strong style="color: #4CAF50;"><%= @group.name %></strong> bei.
+    </p>
+    
+    <form id="join-form">
+      <input type="text" 
+             id="player-name" 
+             name="player_name" 
+             placeholder="Dein Name (optional)"
+             maxlength="50"
+             autocomplete="off">
+      
+      <button type="submit" class="btn btn-primary">
+        ✓ Beitreten
+      </button>
+    </form>
+    
+    <div id="loading" class="loading">
+      <div class="spinner"></div>
+      <p>Wird verarbeitet...</p>
+    </div>
+    
+    <div id="message" style="display:none;"></div>
+  </div>
+  
+  <div class="card" style="text-align: center; color: rgba(255,255,255,0.5); font-size: 0.9rem;">
+    <p>Nach dem Beitreten kannst du:</p>
+    <ul style="text-align: left; margin-top: 10px; padding-left: 20px;">
+      <li>Posten sehen und abhaken</li>
+      <li>Spielregeln nachlesen</li>
+      <li>Aktionen einreichen</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+  const JOIN_TOKEN = '<%= @token %>';
+  
+  document.getElementById('join-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const playerName = document.getElementById('player-name').value.trim();
+    const loading = document.getElementById('loading');
+    const message = document.getElementById('message');
+    const form = document.getElementById('join-form');
+    
+    // Show loading
+    form.style.display = 'none';
+    loading.classList.add('active');
+    message.style.display = 'none';
+    
+    try {
+      const response = await fetch(`/join/${JOIN_TOKEN}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: JSON.stringify({ player_name: playerName })
+      });
+      
+      const data = await response.json();
+      loading.classList.remove('active');
+      
+      if (data.success) {
+        // Store session in localStorage and cookie
+        localStorage.setItem('ggame_session_token', data.session_token);
+        localStorage.setItem('ggame_group_name', data.group_name);
+        document.cookie = `player_session_token=${data.session_token}; path=/; max-age=604800`; // 7 days
+        
+        message.innerHTML = `<div class="alert alert-success">
+          <strong>✓ ${data.message}</strong><br>
+          <small>Du wirst weitergeleitet...</small>
+        </div>`;
+        message.style.display = 'block';
+        
+        // Redirect to player home
+        setTimeout(() => {
+          window.location.href = '/play';
+        }, 1500);
+      } else {
+        form.style.display = 'block';
+        message.innerHTML = `<div class="alert alert-error">
+          <strong>✗ Fehler:</strong> ${data.message}
+        </div>`;
+        message.style.display = 'block';
+      }
+    } catch (error) {
+      loading.classList.remove('active');
+      form.style.display = 'block';
+      message.innerHTML = `<div class="alert alert-error">
+        <strong>✗ Verbindungsfehler</strong><br>
+        Bitte versuche es erneut.
+      </div>`;
+      message.style.display = 'block';
+    }
+  });
+  
+  // Check if already joined
+  document.addEventListener('DOMContentLoaded', function() {
+    const existingToken = localStorage.getItem('ggame_session_token');
+    if (existingToken) {
+      // Could redirect to /play or show "already joined" message
+    }
+  });
+</script>

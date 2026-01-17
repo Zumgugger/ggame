@@ -1,0 +1,70 @@
+<% content_for(:title) { "#{@group.name} - GGame" } %>
+
+<div class="header">
+  <h1>🎮 GGame</h1>
+  <div class="group-name"><%= @group.name %></div>
+</div>
+
+<div class="content">
+  <div class="card">
+    <h2>👋 Willkommen!</h2>
+    <p style="color: rgba(255,255,255,0.7); margin-bottom: 10px;">
+      <% if @session.player_name.present? %>
+        Hallo <strong><%= @session.player_name %></strong>!
+      <% else %>
+        Du bist Mitglied von <strong><%= @group.name %></strong>.
+      <% end %>
+    </p>
+    <p style="color: rgba(255,255,255,0.5); font-size: 0.9rem;">
+      Punkte: <strong style="color: #4CAF50;"><%= @group.points || 0 %></strong>
+    </p>
+  </div>
+
+  <a href="/play/targets" class="btn btn-primary">
+    🎯 Posten ansehen
+  </a>
+  
+  <a href="/play/rules" class="btn btn-secondary">
+    📜 Spielregeln
+  </a>
+  
+  <!-- Future: Submit action button -->
+  <!--
+  <a href="/play/submit" class="btn btn-secondary">
+    📸 Aktion einreichen
+  </a>
+  -->
+</div>
+
+<!-- Bottom Navigation -->
+<nav class="nav-menu">
+  <a href="/play" class="nav-item active">
+    <span class="icon">🏠</span>
+    <span>Home</span>
+  </a>
+  <a href="/play/targets" class="nav-item">
+    <span class="icon">🎯</span>
+    <span>Posten</span>
+  </a>
+  <a href="/play/rules" class="nav-item">
+    <span class="icon">📜</span>
+    <span>Regeln</span>
+  </a>
+</nav>
+
+<script>
+  // Keep session alive
+  setInterval(() => {
+    const token = localStorage.getItem('ggame_session_token');
+    if (token) {
+      fetch('/api/player_sessions/update_activity', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: JSON.stringify({ session_token: token })
+      });
+    }
+  }, 5 * 60 * 1000); // Every 5 minutes
+</script>
