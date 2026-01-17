@@ -16,6 +16,7 @@
 #
 class Target < ApplicationRecord
   has_many :events
+  has_many :submissions
   require "csv"
 
   # Define searchable attributes for Ransack

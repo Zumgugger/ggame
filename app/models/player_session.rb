@@ -24,6 +24,7 @@
 #
 class PlayerSession < ApplicationRecord
   belongs_to :group, optional: true
+  has_many :submissions
 
   before_create :generate_session_token
 

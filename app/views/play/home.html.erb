@@ -20,23 +20,29 @@
     </p>
   </div>
 
-  <a href="/play/targets" class="btn btn-primary">
+  <!-- Primary Action: Submit -->
+  <a href="<%= play_submit_path %>" class="btn btn-submit">
+    📤 Aktion einreichen
+  </a>
+
+  <a href="<%= play_my_submissions_path %>" class="btn btn-secondary">
+    📋 Meine Einreichungen
+    <% pending_count = @session.submissions.pending.count %>
+    <% if pending_count > 0 %>
+      <span class="badge"><%= pending_count %></span>
+    <% end %>
+  </a>
+
+  <a href="<%= play_targets_path %>" class="btn btn-primary">
     🎯 Posten ansehen
   </a>
   
-  <a href="/play/rules" class="btn btn-secondary">
+  <a href="<%= play_rules_path %>" class="btn btn-secondary">
     📜 Spielregeln
   </a>
   
-  <!-- Future: Submit action button -->
-  <!--
-  <a href="/play/submit" class="btn btn-secondary">
-    📸 Aktion einreichen
-  </a>
-  -->
-  
   <div style="margin-top: 30px; text-align: center;">
-    <a href="/play/logout" data-method="delete" class="btn btn-danger" style="width: auto; display: inline-block; padding: 10px 20px; font-size: 0.9rem;"
+    <a href="<%= play_logout_path %>" data-method="delete" class="btn btn-danger" style="width: auto; display: inline-block; padding: 10px 20px; font-size: 0.9rem;"
        onclick="if(!confirm('Wirklich abmelden?')) return false; localStorage.removeItem('ggame_session_token'); localStorage.removeItem('ggame_group_name');">
       🚪 Abmelden
     </a>
@@ -45,19 +51,46 @@
 
 <!-- Bottom Navigation -->
 <nav class="nav-menu">
-  <a href="/play" class="nav-item active">
+  <a href="<%= play_home_path %>" class="nav-item active">
     <span class="icon">🏠</span>
     <span>Home</span>
   </a>
-  <a href="/play/targets" class="nav-item">
+  <a href="<%= play_submit_path %>" class="nav-item">
+    <span class="icon">📤</span>
+    <span>Einreichen</span>
+  </a>
+  <a href="<%= play_targets_path %>" class="nav-item">
     <span class="icon">🎯</span>
     <span>Posten</span>
   </a>
-  <a href="/play/rules" class="nav-item">
+  <a href="<%= play_rules_path %>" class="nav-item">
     <span class="icon">📜</span>
     <span>Regeln</span>
   </a>
 </nav>
+
+<style>
+  .btn-submit {
+    background: linear-gradient(135deg, #00b894, #00cec9) !important;
+    font-size: 1.2rem !important;
+    padding: 18px !important;
+    animation: pulse 2s infinite;
+  }
+  
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+  }
+  
+  .badge {
+    background: #e74c3c;
+    color: white;
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-left: 8px;
+  }
+</style>
 
 <script>
   // Keep session alive

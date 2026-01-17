@@ -4,8 +4,8 @@ class PlayController < ApplicationController
   layout 'player'
   
   before_action :check_existing_session, only: [:join]
-  before_action :require_player_session, only: [:home, :targets]
-  before_action :update_activity, only: [:home, :targets, :rules]
+  before_action :require_player_session, only: [:home, :targets, :submit, :my_submissions]
+  before_action :update_activity, only: [:home, :targets, :rules, :submit, :my_submissions]
 
   # GET /join/:token - QR code landing page
   def join
@@ -98,6 +98,54 @@ class PlayController < ApplicationController
     else
       render json: { valid: false }
     end
+  end
+
+  # GET /play/submit - Submission form
+  def submit
+    @group = @session.group
+    @options = Option.where(active: true).includes(:option_setting)
+    @target_groups = Group.where.not(id: @group.id).order(:name)
+  end
+
+  # POST /play/submit - Process submission
+  def create_submission
+    @session = current_player_session
+    unless @session&.group
+      render json: { success: false, message: 'Session ungültig' }, status: :unauthorized
+      return
+    end
+
+    @submission = Submission.new(
+      group: @session.group,
+      player_session: @session,
+      option_id: params[:option_id],
+      target_id: params[:target_id].presence,
+      description: params[:description]
+    )
+
+    # Handle photo upload
+    if params[:photo].present?
+      @submission.photo.attach(params[:photo])
+    end
+
+    if @submission.save
+      render json: {
+        success: true,
+        message: 'Einreichung erfolgreich! Warte auf Bestätigung.',
+        submission_id: @submission.id
+      }
+    else
+      render json: {
+        success: false,
+        message: @submission.errors.full_messages.join(', ')
+      }, status: :unprocessable_entity
+    end
+  end
+
+  # GET /play/submissions - My submissions list
+  def my_submissions
+    @group = @session.group
+    @submissions = @session.submissions.recent.includes(:option, :target)
   end
   
   # DELETE /play/logout - Clear session

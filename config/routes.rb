@@ -42,6 +42,13 @@ Rails.application.routes.draw do
         patch :update_activity
       end
     end
+    
+    resources :submissions, only: [ :index, :show, :create ] do
+      collection do
+        get :options
+        get :targets
+      end
+    end
   end
 
   # Player PWA routes
@@ -51,6 +58,9 @@ Rails.application.routes.draw do
   get "/play/targets", to: "play#targets", as: "play_targets"
   get "/play/rules", to: "play#rules", as: "play_rules"
   get "/play/session_status", to: "play#session_status", as: "play_session_status"
+  get "/play/submit", to: "play#submit", as: "play_submit"
+  post "/play/submit", to: "play#create_submission", as: "play_create_submission"
+  get "/play/submissions", to: "play#my_submissions", as: "play_my_submissions"
   delete "/play/logout", to: "play#logout", as: "play_logout"
 
   resources :events

@@ -1,0 +1,215 @@
+<div class="player-page submissions-page">
+  <header class="player-header">
+    <h1>📋 Meine Einreichungen</h1>
+    <p><%= @group.name %></p>
+  </header>
+
+  <% if @submissions.empty? %>
+    <div class="empty-state">
+      <div class="empty-icon">📭</div>
+      <h3>Keine Einreichungen</h3>
+      <p>Du hast noch keine Aktionen eingereicht.</p>
+      <a href="<%= play_submit_path %>" class="btn btn-primary">
+        📤 Erste Aktion einreichen
+      </a>
+    </div>
+  <% else %>
+    <div class="submissions-list">
+      <% @submissions.each do |submission| %>
+        <div class="submission-card status-<%= submission.status %>">
+          <div class="submission-header">
+            <span class="submission-option"><%= submission.option.name %></span>
+            <span class="submission-status">
+              <% case submission.status %>
+              <% when 'pending' %>
+                ⏳ Ausstehend
+              <% when 'verified' %>
+                ✅ Bestätigt
+              <% when 'denied' %>
+                ❌ Abgelehnt
+              <% end %>
+            </span>
+          </div>
+          
+          <% if submission.target %>
+            <div class="submission-target">
+              🎯 <%= submission.target.name %>
+            </div>
+          <% end %>
+          
+          <div class="submission-meta">
+            <span class="submission-time">
+              🕒 <%= submission.submitted_at.strftime('%H:%M Uhr') %>
+            </span>
+            <% if submission.status == 'pending' %>
+              <span class="submission-waiting">
+                Wartet seit <%= submission.waiting_time_text %>
+              </span>
+            <% end %>
+          </div>
+          
+          <% if submission.photo.attached? %>
+            <div class="submission-photo-indicator">
+              📷 Foto angehängt
+            </div>
+          <% end %>
+          
+          <% if submission.admin_message.present? %>
+            <div class="submission-message">
+              💬 <%= submission.admin_message %>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+
+  <!-- Navigation -->
+  <nav class="player-nav">
+    <a href="<%= play_home_path %>" class="nav-item">🏠 Home</a>
+    <a href="<%= play_submit_path %>" class="nav-item">📤 Einreichen</a>
+    <a href="<%= play_targets_path %>" class="nav-item">🎯 Posten</a>
+  </nav>
+</div>
+
+<style>
+  .submissions-page {
+    padding-bottom: 80px;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #888;
+  }
+
+  .empty-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+  }
+
+  .empty-state h3 {
+    color: #fff;
+    margin-bottom: 0.5rem;
+  }
+
+  .empty-state .btn {
+    margin-top: 1.5rem;
+    display: inline-block;
+    padding: 1rem 2rem;
+    background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+    color: white;
+    text-decoration: none;
+    border-radius: 12px;
+    font-weight: 600;
+  }
+
+  .submissions-list {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .submission-card {
+    background: #252540;
+    border-radius: 12px;
+    padding: 1rem;
+    border-left: 4px solid #888;
+  }
+
+  .submission-card.status-pending {
+    border-left-color: #f1c40f;
+  }
+
+  .submission-card.status-verified {
+    border-left-color: #2ed573;
+  }
+
+  .submission-card.status-denied {
+    border-left-color: #e74c3c;
+  }
+
+  .submission-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+
+  .submission-option {
+    font-weight: 600;
+    color: #fff;
+    font-size: 1.1rem;
+  }
+
+  .submission-status {
+    font-size: 0.85rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .submission-target {
+    color: #a29bfe;
+    margin-bottom: 0.5rem;
+  }
+
+  .submission-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: #888;
+    margin-top: 0.5rem;
+  }
+
+  .submission-photo-indicator {
+    font-size: 0.85rem;
+    color: #74b9ff;
+    margin-top: 0.5rem;
+  }
+
+  .submission-message {
+    margin-top: 0.75rem;
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    color: #ddd;
+  }
+
+  .player-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #252540;
+    display: flex;
+    justify-content: space-around;
+    padding: 0.75rem 0;
+    border-top: 1px solid #333;
+  }
+
+  .nav-item {
+    color: #888;
+    text-decoration: none;
+    font-size: 0.9rem;
+    text-align: center;
+  }
+
+  .nav-item.active {
+    color: #6c5ce7;
+  }
+</style>
+
+<script>
+// Auto-refresh pending submissions every 30 seconds
+document.addEventListener('DOMContentLoaded', function() {
+  const pendingCount = document.querySelectorAll('.status-pending').length;
+  if (pendingCount > 0) {
+    setTimeout(() => {
+      location.reload();
+    }, 30000);
+  }
+});
+</script>

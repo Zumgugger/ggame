@@ -1,0 +1,385 @@
+<div class="player-page submit-page">
+  <header class="player-header">
+    <h1>📤 Aktion einreichen</h1>
+    <p><%= @group.name %></p>
+  </header>
+
+  <% unless GameSetting.instance.game_running? %>
+    <div class="alert alert-warning">
+      ⚠️ Das Spiel läuft gerade nicht. Einreichungen sind nicht möglich.
+    </div>
+  <% else %>
+
+  <form id="submission-form" class="submission-form" enctype="multipart/form-data">
+    <!-- Option Selection -->
+    <div class="form-group">
+      <label for="option_id">Aktion auswählen *</label>
+      <select name="option_id" id="option_id" required>
+        <option value="">-- Aktion wählen --</option>
+        <% @options.each do |option| %>
+          <% setting = option.option_setting %>
+          <option value="<%= option.id %>" 
+                  data-requires-target="<%= option.requires_target? %>"
+                  data-requires-photo="<%= setting&.requires_photo? %>">
+            <%= option.name %>
+            <% if setting&.base_points %>
+              (<%= setting.base_points %> Pkt.)
+            <% end %>
+          </option>
+        <% end %>
+      </select>
+    </div>
+
+    <!-- Target Selection (shown/hidden based on option) -->
+    <div class="form-group target-group" id="target-group" style="display: none;">
+      <label for="target_id">Zielgruppe auswählen *</label>
+      <select name="target_id" id="target_id">
+        <option value="">-- Zielgruppe wählen --</option>
+        <% @target_groups.each do |target| %>
+          <option value="<%= target.id %>"><%= target.name %></option>
+        <% end %>
+      </select>
+    </div>
+
+    <!-- Photo Capture -->
+    <div class="form-group photo-group" id="photo-group">
+      <label>Foto aufnehmen</label>
+      
+      <div class="photo-preview" id="photo-preview">
+        <div class="photo-placeholder" id="photo-placeholder">
+          <span class="camera-icon">📷</span>
+          <span>Tippe um Foto aufzunehmen</span>
+        </div>
+        <img id="preview-image" src="" alt="Vorschau" style="display: none;">
+        <button type="button" id="remove-photo" class="btn-remove-photo" style="display: none;">✕</button>
+      </div>
+      
+      <input type="file" 
+             name="photo" 
+             id="photo-input" 
+             accept="image/*" 
+             capture="environment"
+             style="display: none;">
+      
+      <p class="photo-hint" id="photo-hint">Foto ist optional für diese Aktion</p>
+    </div>
+
+    <!-- Description -->
+    <div class="form-group">
+      <label for="description">Beschreibung (optional)</label>
+      <textarea name="description" id="description" 
+                placeholder="Zusätzliche Informationen..." 
+                rows="2"></textarea>
+    </div>
+
+    <!-- Submit Button -->
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary btn-large" id="submit-btn">
+        📤 Einreichen
+      </button>
+    </div>
+  </form>
+
+  <% end %>
+
+  <!-- Status Messages -->
+  <div id="status-message" class="status-message" style="display: none;"></div>
+
+  <!-- Navigation -->
+  <nav class="player-nav">
+    <a href="<%= play_home_path %>" class="nav-item">🏠 Home</a>
+    <a href="<%= play_my_submissions_path %>" class="nav-item">📋 Meine</a>
+    <a href="<%= play_targets_path %>" class="nav-item">🎯 Posten</a>
+  </nav>
+</div>
+
+<style>
+  .submit-page {
+    padding-bottom: 80px;
+  }
+
+  .submission-form {
+    padding: 1rem;
+  }
+
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #e0e0e0;
+  }
+
+  .form-group select,
+  .form-group textarea {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1rem;
+    border: 2px solid #333;
+    border-radius: 12px;
+    background: #252540;
+    color: #fff;
+  }
+
+  .form-group select:focus,
+  .form-group textarea:focus {
+    outline: none;
+    border-color: #6c5ce7;
+  }
+
+  .photo-preview {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4/3;
+    background: #252540;
+    border: 2px dashed #444;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    cursor: pointer;
+  }
+
+  .photo-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    color: #888;
+  }
+
+  .camera-icon {
+    font-size: 3rem;
+  }
+
+  #preview-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .btn-remove-photo {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 0, 0, 0.8);
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+  }
+
+  .photo-hint {
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    color: #888;
+    text-align: center;
+  }
+
+  .photo-hint.required {
+    color: #e74c3c;
+  }
+
+  .form-actions {
+    margin-top: 2rem;
+  }
+
+  .btn-large {
+    width: 100%;
+    padding: 1.2rem;
+    font-size: 1.2rem;
+    font-weight: 700;
+    border-radius: 12px;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+    border: none;
+    color: white;
+    cursor: pointer;
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .status-message {
+    margin: 1rem;
+    padding: 1rem;
+    border-radius: 12px;
+    text-align: center;
+  }
+
+  .status-message.success {
+    background: rgba(46, 213, 115, 0.2);
+    color: #2ed573;
+  }
+
+  .status-message.error {
+    background: rgba(231, 76, 60, 0.2);
+    color: #e74c3c;
+  }
+
+  .alert {
+    margin: 1rem;
+    padding: 1rem;
+    border-radius: 12px;
+  }
+
+  .alert-warning {
+    background: rgba(241, 196, 15, 0.2);
+    color: #f1c40f;
+    text-align: center;
+  }
+
+  .player-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #252540;
+    display: flex;
+    justify-content: space-around;
+    padding: 0.75rem 0;
+    border-top: 1px solid #333;
+  }
+
+  .nav-item {
+    color: #888;
+    text-decoration: none;
+    font-size: 0.9rem;
+    text-align: center;
+  }
+
+  .nav-item.active {
+    color: #6c5ce7;
+  }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const form = document.getElementById('submission-form');
+  const optionSelect = document.getElementById('option_id');
+  const targetGroup = document.getElementById('target-group');
+  const targetSelect = document.getElementById('target_id');
+  const photoGroup = document.getElementById('photo-group');
+  const photoInput = document.getElementById('photo-input');
+  const photoPreview = document.getElementById('photo-preview');
+  const photoPlaceholder = document.getElementById('photo-placeholder');
+  const previewImage = document.getElementById('preview-image');
+  const removePhotoBtn = document.getElementById('remove-photo');
+  const photoHint = document.getElementById('photo-hint');
+  const submitBtn = document.getElementById('submit-btn');
+  const statusMessage = document.getElementById('status-message');
+
+  // Option change handler
+  optionSelect.addEventListener('change', function() {
+    const selected = this.options[this.selectedIndex];
+    const requiresTarget = selected.dataset.requiresTarget === 'true';
+    const requiresPhoto = selected.dataset.requiresPhoto === 'true';
+
+    // Show/hide target selection
+    targetGroup.style.display = requiresTarget ? 'block' : 'none';
+    targetSelect.required = requiresTarget;
+
+    // Update photo hint
+    if (requiresPhoto) {
+      photoHint.textContent = '📷 Foto erforderlich für diese Aktion';
+      photoHint.classList.add('required');
+      photoInput.required = true;
+    } else {
+      photoHint.textContent = 'Foto ist optional für diese Aktion';
+      photoHint.classList.remove('required');
+      photoInput.required = false;
+    }
+  });
+
+  // Photo capture
+  photoPreview.addEventListener('click', function() {
+    photoInput.click();
+  });
+
+  photoInput.addEventListener('change', function() {
+    if (this.files && this.files[0]) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        previewImage.src = e.target.result;
+        previewImage.style.display = 'block';
+        photoPlaceholder.style.display = 'none';
+        removePhotoBtn.style.display = 'block';
+      };
+      reader.readAsDataURL(this.files[0]);
+    }
+  });
+
+  // Remove photo
+  removePhotoBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    photoInput.value = '';
+    previewImage.src = '';
+    previewImage.style.display = 'none';
+    photoPlaceholder.style.display = 'flex';
+    removePhotoBtn.style.display = 'none';
+  });
+
+  // Form submission
+  form.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    submitBtn.disabled = true;
+    submitBtn.textContent = '⏳ Wird gesendet...';
+    statusMessage.style.display = 'none';
+
+    const formData = new FormData(form);
+
+    try {
+      const response = await fetch('<%= play_create_submission_path %>', {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+        }
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        statusMessage.textContent = '✅ ' + data.message;
+        statusMessage.className = 'status-message success';
+        statusMessage.style.display = 'block';
+        
+        // Reset form
+        form.reset();
+        previewImage.style.display = 'none';
+        photoPlaceholder.style.display = 'flex';
+        removePhotoBtn.style.display = 'none';
+        targetGroup.style.display = 'none';
+        
+        // Redirect after short delay
+        setTimeout(() => {
+          window.location.href = '<%= play_my_submissions_path %>';
+        }, 1500);
+      } else {
+        statusMessage.textContent = '❌ ' + data.message;
+        statusMessage.className = 'status-message error';
+        statusMessage.style.display = 'block';
+      }
+    } catch (error) {
+      statusMessage.textContent = '❌ Netzwerkfehler. Bitte erneut versuchen.';
+      statusMessage.className = 'status-message error';
+      statusMessage.style.display = 'block';
+    }
+
+    submitBtn.disabled = false;
+    submitBtn.textContent = '📤 Einreichen';
+  });
+});
+</script>

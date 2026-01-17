@@ -20,6 +20,8 @@
 class Group < ApplicationRecord
   has_many :events
   has_many :users
+  has_many :player_sessions
+  has_many :submissions
 
   # Generate join token before validation
   before_validation :generate_join_token, on: :create
