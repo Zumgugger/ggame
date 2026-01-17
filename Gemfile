@@ -64,6 +64,12 @@ gem "activestorage"   # For uploading files
 # added to generate dummy data for the users database table
 gem "faker"
 
+# added for QR code generation
+gem "rqrcode", "~> 2.2.0"
+
+# added for PDF generation
+gem "prawn", "~> 2.4.0"
+
 
 
 

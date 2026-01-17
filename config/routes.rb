@@ -46,5 +46,6 @@ Rails.application.routes.draw do
 
   resources :events
   get "/main", controller: "events", action: :main
+  get "/groups/:id/qr_pdf", to: "events#group_qr_pdf", as: "group_qr_pdf"
   get "/", controller: "events", action: :main
 end

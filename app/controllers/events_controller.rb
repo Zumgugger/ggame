@@ -48,6 +48,47 @@ class EventsController < ApplicationController
     redirect_to events_url, notice: "Event was successfully destroyed."
   end
 
+  # GET /groups/:id/qr_pdf
+  # Download QR code as PDF
+  def group_qr_pdf
+    @group = Group.find(params[:id])
+    
+    # Generate QR code
+    qr_url = "#{request.protocol}#{request.host}/api/player_sessions/join?token=#{@group.join_token}"
+    qr = RQRCode::QRCode.new(qr_url, size: 10, level: :h)
+    
+    # Create PNG image
+    qr_png = qr.as_png(size: 300)
+    temp_file = Tempfile.new(['qr', '.png'], Rails.root.join('tmp'))
+    temp_file.binmode
+    temp_file.write(qr_png)
+    temp_file.flush
+    
+    # Create PDF with prawn
+    pdf = Prawn::Document.new
+    pdf.font_size 24
+    pdf.text @group.name, align: :center, style: :bold
+    
+    pdf.move_down 20
+    
+    # Add QR code to PDF
+    pdf.image temp_file.path, width: 300, align: :center
+    
+    pdf.move_down 20
+    pdf.font_size 12
+    pdf.text "Token: #{@group.join_token}", align: :center, color: "666666"
+    
+    # Get PDF as string before cleanup
+    pdf_content = pdf.render
+    
+    # Cleanup
+    temp_file.close
+    temp_file.unlink
+    
+    # Send PDF
+    send_data pdf_content, filename: "#{@group.name}-QR-Code.pdf", type: "application/pdf"
+  end
+
   private
 
   # Set the event instance

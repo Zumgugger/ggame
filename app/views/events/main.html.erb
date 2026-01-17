@@ -60,6 +60,14 @@
           <td><%= group.false_information ? "ja!" : "nein" %></td>
           <td><%= link_to 'Show', admin_group_path(group) %></td>
           <td><%= link_to 'Edit', edit_admin_group_path(group) %></td>
+          <td>
+            <button class="qr-show-btn" data-group-id="<%= group.id %>" data-group-name="<%= group.name %>" data-token="<%= group.join_token %>" title="QR-Code anzeigen">
+              📱
+            </button>
+          </td>
+          <td>
+            <%= link_to "⬇️", group_qr_pdf_path(group), method: :get, title: "QR-Code als PDF herunterladen" %>
+          </td>
         </tr>
       <% end %>
 
@@ -67,3 +75,108 @@
   </table>
 </div>
       <%= link_to "admin, tread with care!", admin_root_path %>
+
+<!-- QR Code Modal -->
+<div id="qr-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+  <div style="background:white; padding:30px; border-radius:8px; text-align:center; max-width:500px;">
+    <h2 id="qr-group-name"></h2>
+    <div id="qr-code-container" style="margin:20px 0; display:flex; justify-content:center; min-height:310px;">
+      <!-- QR code image will be inserted here -->
+    </div>
+    <p id="qr-token" style="word-break:break-all; color:#666; font-size:12px;"></p>
+    <button onclick="document.getElementById('qr-modal').style.display='none'" style="padding:10px 20px; margin-right:10px;">Schließen</button>
+    <button id="qr-download-btn" onclick="downloadQRAsImage()" style="padding:10px 20px; background:#007bff; color:white; border:none; border-radius:4px; cursor:pointer;">Als Bild speichern</button>
+  </div>
+</div>
+
+<script>
+  // Initialize QR buttons when DOM is ready
+  function initQRButtons() {
+    const buttons = document.querySelectorAll('.qr-show-btn');
+    console.log('Found QR buttons:', buttons.length);
+    
+    buttons.forEach((btn, index) => {
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        console.log('QR button clicked:', index);
+        
+        const groupId = this.getAttribute('data-group-id');
+        const groupName = this.getAttribute('data-group-name');
+        const token = this.getAttribute('data-token');
+        
+        console.log('Group:', groupName, 'Token:', token);
+        
+        // Get current protocol and host from window.location
+        const protocol = window.location.protocol;
+        const host = window.location.host;
+        const qrUrl = `${protocol}//${host}/api/player_sessions/join?token=${token}`;
+        
+        console.log('QR URL:', qrUrl);
+        
+        // Clear previous QR code
+        const container = document.getElementById('qr-code-container');
+        container.innerHTML = '<div id="qr-canvas"></div>';
+        
+        // Generate QR code using qrcodejs library
+        new QRCode(document.getElementById('qr-canvas'), {
+          text: qrUrl,
+          width: 300,
+          height: 300,
+          colorDark: '#000000',
+          colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel.H
+        });
+        
+        console.log('QR Code generated successfully');
+        
+        // Update modal
+        document.getElementById('qr-group-name').textContent = `QR-Code: ${groupName}`;
+        document.getElementById('qr-token').textContent = `Token: ${token}`;
+        document.getElementById('qr-download-btn').setAttribute('data-group-name', groupName);
+        document.getElementById('qr-download-btn').setAttribute('data-group-id', groupId);
+        
+        // Show modal
+        document.getElementById('qr-modal').style.display = 'flex';
+      });
+    });
+  }
+  
+  // Initialize when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initQRButtons);
+  } else {
+    initQRButtons();
+  }
+  
+  // Download QR as Image
+  function downloadQRAsImage() {
+    const container = document.getElementById('qr-canvas');
+    const img = container.querySelector('img');
+    const canvas = container.querySelector('canvas');
+    const groupName = document.getElementById('qr-download-btn').getAttribute('data-group-name');
+    
+    const link = document.createElement('a');
+    if (canvas) {
+      link.href = canvas.toDataURL('image/png');
+    } else if (img) {
+      link.href = img.src;
+    } else {
+      alert('QR-Code nicht gefunden');
+      return;
+    }
+    link.download = `${groupName}-QR-Code.png`;
+    link.click();
+  }
+  
+  // Close modal on outside click
+  window.addEventListener('load', function() {
+    const modal = document.getElementById('qr-modal');
+    if (modal) {
+      modal.addEventListener('click', function(e) {
+        if (e.target === this) {
+          this.style.display = 'none';
+        }
+      });
+    }
+  });
+</script>
