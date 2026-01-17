@@ -5,6 +5,7 @@
 #  id                  :bigint           not null, primary key
 #  description         :string
 #  group_points        :integer
+#  hidden_until        :datetime
 #  noticed             :boolean
 #  points_set          :integer
 #  target_group_points :integer
@@ -143,6 +144,12 @@ class Event < ApplicationRecord
         end
         self.target_points = -400
         target_group.points += self.target_points
+        
+        # Hide the point deduction from the photographed group until the "hat Foto bemerkt" window expires
+        # This prevents them from deducing they were photographed by watching their points
+        foto_bemerkt_option = Option.find_by(name: "hat Foto bemerkt")
+        foto_bemerkt_window = foto_bemerkt_option&.option_setting&.cooldown_seconds || 600
+        self.hidden_until = self.time + foto_bemerkt_window.seconds
       end
     when "hat sondiert"
       if group.points < 50
@@ -215,6 +222,10 @@ class Event < ApplicationRecord
         self.target_points = -200
         target_group.points += self.target_points
         append_to_description("Foto von #{@last_foto_got.time.strftime("%H:%M")} bemerkt.")
+        
+        # Reveal the original photo event immediately since they noticed it
+        # (They now know they were photographed, so no need to hide the deduction)
+        @last_foto_got.update!(hidden_until: nil) if @last_foto_got&.hidden_until.present?
       end
     when "hat Kopfgeld gesetzt"
       if group.points < points_set

@@ -22,6 +22,9 @@ class Group < ApplicationRecord
   has_many :users
   has_many :player_sessions
   has_many :submissions
+  
+  # Events where this group is the target (being photographed, etc.)
+  has_many :targeted_events, class_name: 'Event', foreign_key: 'target_group_id'
 
   # Generate join token before validation
   before_validation :generate_join_token, on: :create
@@ -38,6 +41,19 @@ class Group < ApplicationRecord
   # Generate QR code for joining
   def qr_code_url
     Rails.application.routes.url_helpers.join_url(token: join_token)
+  end
+
+  # Points visible to players - hides recent photo deductions until window expires
+  # This prevents groups from knowing they were photographed by watching their points
+  def player_visible_points
+    # Find events where this group is the target and the deduction is still hidden
+    hidden_deductions = targeted_events
+      .where('hidden_until > ?', Time.current)
+      .where.not(target_points: nil)
+      .sum(:target_points)
+    
+    # Add back the hidden deductions (they're negative, so this shows higher points)
+    points - hidden_deductions
   end
 
   private

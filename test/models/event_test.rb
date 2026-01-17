@@ -5,6 +5,7 @@
 #  id                  :bigint           not null, primary key
 #  description         :string
 #  group_points        :integer
+#  hidden_until        :datetime
 #  noticed             :boolean
 #  points_set          :integer
 #  target_group_points :integer

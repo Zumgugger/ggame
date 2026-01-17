@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_01_17_125728) do
+ActiveRecord::Schema[7.2].define(version: 2026_01_17_131142) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -83,6 +83,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_01_17_125728) do
     t.integer "option_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.datetime "hidden_until"
   end
 
   create_table "game_settings", force: :cascade do |t|

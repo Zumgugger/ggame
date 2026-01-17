@@ -93,7 +93,7 @@ class PlayController < ApplicationController
         valid: true,
         group_name: session.group.name,
         player_name: session.player_name,
-        points: session.group.points
+        points: session.group.player_visible_points
       }
     else
       render json: { valid: false }
