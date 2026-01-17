@@ -2,7 +2,7 @@
 
 > **Document Created:** January 17, 2026  
 > **Last Updated:** January 17, 2026
-> **Status:** Phase 1 Complete, Phase 2 In Progress  
+> **Status:** Phase 1-4 Complete, Phase 5 Next  
 > **Estimated Total Effort:** 4-6 weeks
 
 ---
@@ -226,7 +226,7 @@ add_column :events, :queued_behind_id, :bigint, optional: true
 
 ---
 
-### Phase 2: Player Session & QR System (Week 2) ⏳ IN PROGRESS
+### Phase 2: Player Session & QR System (Week 2) ✅ COMPLETE
 **Goal:** QR code group assignment
 
 | Task | Description | Status | Effort |
@@ -236,54 +236,71 @@ add_column :events, :queued_behind_id, :bigint, optional: true
 | 2.3 | QR code generation (using `rqrcode` gem) | ✅ Done | 2h |
 | 2.4 | Display QR codes in admin Group view | ✅ Done | 2h |
 | 2.5 | Create `/join/:token` endpoint | ✅ Done | 2h |
-| 2.6 | Session token generation & storage (localStorage) | ⏳ Next | 3h |
-| 2.7 | Device fingerprinting (basic) | ⏳ Queued | 2h |
-| 2.8 | Group name entry flow (if not set) | ⏳ Queued | 2h |
-| 2.9 | Returning player detection (same token = same group) | ⏳ Queued | 2h |
+| 2.6 | Session token generation & storage (cookies) | ✅ Done | 3h |
+| 2.7 | Device fingerprinting (basic) | ✅ Done | 2h |
+| 2.8 | Group name entry flow (if not set) | ✅ Done | 2h |
+| 2.9 | Returning player detection (same token = same group) | ✅ Done | 2h |
 
 **Additions:**
 - ✅ QR code icons in Control Room (📱 show, ⬇️ PDF download)
 - ✅ qrcodejs library served locally for Docker deployment
+- ✅ Cookie-based session persistence (httpOnly)
+- ✅ PlayController with session management
 
-**Deliverable:** Players can scan QR, get assigned to group, session persists
+**Deliverable:** Players can scan QR, get assigned to group, session persists ✅
 
 ---
 
-### Phase 3: PWA & Player Interface (Week 2-3)
+### Phase 3: PWA & Player Interface (Week 2-3) ✅ COMPLETE
 **Goal:** Mobile app experience
 
-| Task | Description | Effort |
-|------|-------------|--------|
-| 3.1 | Configure PWA manifest & service worker | 3h |
-| 3.2 | Create player layout (mobile-first) | 4h |
-| 3.3 | Home screen with option buttons | 4h |
-| 3.4 | Hamburger menu navigation | 2h |
-| 3.5 | Group info page | 1h |
-| 3.6 | Target list page (with strikethrough for completed) | 3h |
-| 3.7 | Rules page (dynamically generated) | 3h |
-| 3.8 | "Add to Home Screen" prompt | 2h |
+| Task | Description | Status | Effort |
+|------|-------------|--------|--------|
+| 3.1 | Configure PWA manifest & service worker | ✅ Done | 3h |
+| 3.2 | Create player layout (mobile-first) | ✅ Done | 4h |
+| 3.3 | Home screen with option buttons | ✅ Done | 4h |
+| 3.4 | Hamburger menu navigation | ✅ Done | 2h |
+| 3.5 | Group info page | ✅ Done | 1h |
+| 3.6 | Target list page (with strikethrough for completed) | ✅ Done | 3h |
+| 3.7 | Rules page (dynamically generated) | ✅ Done | 3h |
+| 3.8 | "Add to Home Screen" prompt | ✅ Done | 2h |
 
-**Deliverable:** Installable PWA with all player views
+**Additions:**
+- ✅ Dark theme mobile UI
+- ✅ Bottom navigation bar
+- ✅ My Submissions list view
+
+**Deliverable:** Installable PWA with all player views ✅
 
 ---
 
-### Phase 4: Submission System (Week 3-4)
+### Phase 4: Submission System (Week 3-4) ✅ COMPLETE
 **Goal:** Players can submit, admins can verify
 
-| Task | Description | Effort |
-|------|-------------|--------|
-| 4.1 | Create `submissions` migration & model | 2h |
-| 4.2 | Submission controller & form | 4h |
-| 4.3 | Photo capture/upload (camera integration) | 4h |
-| 4.4 | Server timestamp on receipt | 1h |
-| 4.5 | Option validity checking (cooldown, game time, etc.) | 3h |
-| 4.6 | Admin submissions queue view | 4h |
-| 4.7 | Photo display in admin with verify/deny buttons | 3h |
-| 4.8 | Admin message field for feedback | 1h |
-| 4.9 | Auto-verify flow (for non-photo options) | 2h |
-| 4.10 | Create Event on verification | 2h |
+| Task | Description | Status | Effort |
+|------|-------------|--------|--------|
+| 4.1 | Create `submissions` migration & model | ✅ Done | 2h |
+| 4.2 | Submission controller & form | ✅ Done | 4h |
+| 4.3 | Photo capture/upload (camera integration) | ✅ Done | 4h |
+| 4.4 | Server timestamp on receipt | ✅ Done | 1h |
+| 4.5 | Option validity checking (cooldown, game time, etc.) | ✅ Done | 3h |
+| 4.6 | Admin submissions queue view | ✅ Done | 4h |
+| 4.7 | Photo display in admin with verify/deny buttons | ✅ Done | 3h |
+| 4.8 | Admin message field for feedback | ✅ Done | 1h |
+| 4.9 | Auto-verify flow (for non-photo options) | ⏳ Skipped | 2h |
+| 4.10 | Create Event on verification | ✅ Done | 2h |
 
-**Deliverable:** Full submission → verification → event flow
+**Additions:**
+- ✅ Dynamic form fields based on option type (Posten, Zielgruppe, Points)
+- ✅ Camera-only capture on mobile (no gallery access)
+- ✅ Selfie camera for "hat Posten geholt", back camera for others
+- ✅ target_group_id for group-based options
+- ✅ points_set field for Mine/Kopfgeld options
+- ✅ Submission timestamp used for Event (not verification time)
+- ✅ Photo requirements per option (hat spioniert = no photo)
+- ✅ Kopfgeld collection automatic in "hat Gruppe fotografiert"
+
+**Deliverable:** Full submission → verification → event flow ✅
 
 ---
 
@@ -694,7 +711,51 @@ end
 - ✅ Point multiplier integration in Event.calculate_points
 - ✅ CooldownChecker service with per-target-group cooldowns
 
-### Completed in Phase 2 (so far):
+### Completed in Phase 2:
+- ✅ PlayerSession model with device fingerprinting
+- ✅ /api/player_sessions/join endpoint
+- ✅ Session token generation (SecureRandom.hex)
+- ✅ QR code icons in Control Room homepage
+- ✅ PDF download with group name and QR code (prawn + rqrcode)
+- ✅ qrcodejs library served locally for Docker compatibility
+- ✅ Cookie-based session persistence
+- ✅ PlayController with full session management
+- ✅ Returning player detection
+
+### Completed in Phase 3:
+- ✅ PWA manifest & service worker
+- ✅ Mobile-first dark theme layout
+- ✅ Player home page with group info
+- ✅ Bottom navigation bar
+- ✅ Target/Posten list with completion status
+- ✅ Rules page from OptionSettings
+- ✅ My Submissions history page
+
+### Completed in Phase 4:
+- ✅ Submission model with ActiveStorage photo
+- ✅ PlayController#submit and #create_submission
+- ✅ Camera-only capture (no gallery on mobile)
+- ✅ Selfie camera for "hat Posten geholt"
+- ✅ Server timestamp on submission
+- ✅ Cooldown and game time validation
+- ✅ Admin submissions queue (/admin/submissions)
+- ✅ Photo display with verify/deny buttons
+- ✅ verify! creates Event with submission timestamp
+- ✅ Dynamic form fields per option:
+  - Posten dropdown (target_id)
+  - Zielgruppe dropdown (target_group_id)
+  - Points input (points_set for Mine/Kopfgeld)
+- ✅ Photo requirements corrected (hat spioniert = no photo)
+
+### Next Steps (Phase 5: Real-time & Notifications):
+1. Set up ActionCable channels
+2. Admin gets live updates when new submissions arrive
+3. Players get notified when submission verified/denied
+4. Auto-refresh UI on state changes
+
+---
+
+*End of Feature Plan*
 - ✅ PlayerSession model with device fingerprinting
 - ✅ /api/player_sessions/join endpoint
 - ✅ Session token generation (SecureRandom.hex)
