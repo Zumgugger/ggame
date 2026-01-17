@@ -201,6 +201,19 @@ class Submission < ApplicationRecord
     end
   end
 
+  # Generate a descriptive filename for the photo
+  def photo_filename
+    return nil unless photo.attached?
+    
+    # Format: GroupName_Option_Timestamp.ext
+    timestamp = submitted_at.strftime('%Y%m%d_%H%M%S')
+    group_name = group.name.gsub(/[^a-zA-Z0-9äöüÄÖÜß]/, '_').truncate(20, omission: '')
+    option_name = option.name.gsub(/[^a-zA-Z0-9äöüÄÖÜß]/, '_').truncate(20, omission: '')
+    extension = photo.filename.extension_with_delimiter
+    
+    "#{group_name}_#{option_name}_#{timestamp}#{extension}"
+  end
+
   # Ransackable attributes for ActiveAdmin search
   def self.ransackable_attributes(auth_object = nil)
     %w[id group_id option_id target_id target_group_id player_session_id status description admin_message 

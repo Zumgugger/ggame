@@ -70,6 +70,9 @@ gem "rqrcode", "~> 2.2.0"
 # added for PDF generation
 gem "prawn", "~> 2.4.0"
 
+# added for ZIP file creation (bulk photo downloads)
+gem "rubyzip", "~> 2.3.0"
+
 
 
 

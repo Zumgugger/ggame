@@ -2,7 +2,7 @@
 
 > **Document Created:** January 17, 2026  
 > **Last Updated:** January 17, 2026
-> **Status:** Phase 1-6 Complete, Phase 7 Next  
+> **Status:** Phase 1-7 Complete, Phase 8 Next  
 > **Estimated Total Effort:** 4-6 weeks
 
 ---
@@ -352,18 +352,27 @@ add_column :events, :queued_behind_id, :bigint, optional: true
 
 ---
 
-### Phase 7: Photo Management (Week 5)
+### Phase 7: Photo Management (Week 5) ✅ COMPLETE
 **Goal:** Download & delete workflow
 
-| Task | Description | Effort |
-|------|-------------|--------|
-| 7.1 | "Download & Archive" button in admin | 2h |
-| 7.2 | Trigger local download via browser | 1h |
-| 7.3 | Delete photo from server after download | 1h |
-| 7.4 | Confirmation dialog before delete | 1h |
-| 7.5 | Bulk download/delete for multiple submissions | 2h |
+| Task | Description | Status | Effort |
+|------|-------------|--------|--------|
+| 7.1 | "Download & Archive" button in admin | ✅ Done | 2h |
+| 7.2 | Trigger local download via browser | ✅ Done | 1h |
+| 7.3 | Delete photo from server after download | ✅ Done | 1h |
+| 7.4 | Confirmation dialog before delete | ✅ Done | 1h |
+| 7.5 | Bulk download/delete for multiple submissions | ✅ Done | 2h |
 
-**Deliverable:** Admin can archive photos locally, server stays clean
+**Additions:**
+- ✅ Download individual photos with descriptive filename (GroupName_Option_Timestamp.ext)
+- ✅ Delete individual photos with confirmation dialog
+- ✅ Photo management panel on submission show page
+- ✅ Bulk download all verified photos as ZIP
+- ✅ Bulk delete all verified photos
+- ✅ Photo statistics sidebar (count, verified count)
+- ✅ rubyzip gem for ZIP file creation
+
+**Deliverable:** Admin can archive photos locally, server stays clean ✅
 
 ---
 
@@ -794,12 +803,22 @@ end
 - ✅ ActionCable broadcasts for queue changes
 - ✅ Warning when admin verifies a queued submission
 
-### Next Steps (Phase 7: Photo Download & Archive):
-1. "Download & Archive" button in admin
-2. Trigger local download via browser
-3. Delete photo from server after download
-4. Confirmation dialog before delete
-5. Bulk download/delete for multiple submissions
+### Completed in Phase 7:
+- ✅ Download individual photos with descriptive filename
+- ✅ Delete individual photos with confirmation dialog
+- ✅ Photo management panel on submission show page
+- ✅ Bulk download all verified photos as ZIP file
+- ✅ Bulk delete all verified photos with confirmation
+- ✅ Photo statistics sidebar (total count, verified count)
+- ✅ rubyzip gem for ZIP file creation
+- ✅ Filename format: GroupName_Option_Timestamp.ext
+
+### Next Steps (Phase 8: Rules View System):
+1. Rules page generation from OptionSettings (already basic implementation exists)
+2. In-place editing in admin (contenteditable or AJAX)
+3. Auto-update when options added/removed
+4. Auto-update when settings change
+5. Basic CSS styling for rules page
 
 ---
 

@@ -45,6 +45,88 @@ ActiveAdmin.register Submission do
     end
   end
 
+  # Photo management actions
+  member_action :download_photo, method: :get do
+    submission = Submission.find(params[:id])
+    if submission.photo.attached?
+      # Generate a descriptive filename
+      filename = submission.photo_filename
+      redirect_to rails_blob_path(submission.photo, disposition: :attachment, filename: filename), allow_other_host: true
+    else
+      redirect_to admin_submission_path(submission), alert: "Kein Foto vorhanden."
+    end
+  end
+
+  member_action :delete_photo, method: :delete do
+    submission = Submission.find(params[:id])
+    if submission.photo.attached?
+      submission.photo.purge
+      redirect_to admin_submission_path(submission), notice: "Foto gelöscht."
+    else
+      redirect_to admin_submission_path(submission), alert: "Kein Foto vorhanden."
+    end
+  end
+
+  member_action :archive_photo, method: :post do
+    submission = Submission.find(params[:id])
+    if submission.photo.attached?
+      # This action triggers download and then deletes
+      # We use a special flow: redirect to download, then JS will call delete
+      filename = submission.photo_filename
+      redirect_to rails_blob_path(submission.photo, disposition: :attachment, filename: filename), allow_other_host: true
+      # Note: Photo deletion happens via separate delete_photo call after download
+    else
+      redirect_to admin_submission_path(submission), alert: "Kein Foto vorhanden."
+    end
+  end
+
+  # Bulk photo actions
+  collection_action :download_all_photos, method: :get do
+    submissions = Submission.where(id: params[:submission_ids]).includes(photo_attachment: :blob)
+    photos_to_download = submissions.select { |s| s.photo.attached? }
+    
+    if photos_to_download.empty?
+      redirect_to admin_submissions_path, alert: "Keine Fotos zum Herunterladen."
+      return
+    end
+
+    # Create a zip file with all photos
+    require 'zip'
+    
+    temp_file = Tempfile.new(['photos', '.zip'])
+    begin
+      Zip::File.open(temp_file.path, Zip::File::CREATE) do |zipfile|
+        photos_to_download.each do |submission|
+          filename = submission.photo_filename
+          zipfile.get_output_stream(filename) do |f|
+            f.write(submission.photo.download)
+          end
+        end
+      end
+      
+      send_file temp_file.path,
+                filename: "fotos_#{Time.current.strftime('%Y%m%d_%H%M%S')}.zip",
+                type: 'application/zip',
+                disposition: 'attachment'
+    ensure
+      temp_file.close
+    end
+  end
+
+  collection_action :delete_all_photos, method: :delete do
+    submissions = Submission.where(id: params[:submission_ids])
+    deleted_count = 0
+    
+    submissions.each do |submission|
+      if submission.photo.attached?
+        submission.photo.purge
+        deleted_count += 1
+      end
+    end
+    
+    redirect_to admin_submissions_path, notice: "#{deleted_count} Fotos gelöscht."
+  end
+
   # Index view - verification queue
   index do
     id_column
@@ -199,9 +281,16 @@ ActiveAdmin.register Submission do
             image_tag rails_blob_path(submission.photo, disposition: :inline), 
                       style: 'max-width: 100%; max-height: 500px; border-radius: 8px;'
           end
-          div style: 'margin-top: 10px;' do
-            link_to 'Foto in neuem Tab öffnen', rails_blob_path(submission.photo, disposition: :inline), 
+          div style: 'margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;' do
+            link_to '📷 Foto öffnen', rails_blob_path(submission.photo, disposition: :inline), 
                     target: '_blank', class: 'button'
+            link_to '⬇️ Herunterladen', download_photo_admin_submission_path(submission), 
+                    class: 'button'
+            link_to '🗑️ Löschen', delete_photo_admin_submission_path(submission),
+                    method: :delete,
+                    class: 'button',
+                    style: 'background-color: #d9534f;',
+                    data: { confirm: 'Foto wirklich löschen? Dies kann nicht rückgängig gemacht werden.' }
           end
         else
           "Kein Foto"
@@ -242,6 +331,24 @@ ActiveAdmin.register Submission do
         end
       end
     end
+
+    # Photo management panel for verified submissions with photos
+    if resource.photo.attached?
+      panel "Foto-Verwaltung" do
+        div style: 'display: flex; gap: 15px; align-items: center;' do
+          link_to '⬇️ Foto herunterladen', download_photo_admin_submission_path(resource), 
+                  class: 'button', style: 'background-color: #5cb85c;'
+          link_to '🗑️ Foto löschen', delete_photo_admin_submission_path(resource),
+                  method: :delete,
+                  class: 'button',
+                  style: 'background-color: #d9534f;',
+                  data: { confirm: 'Foto wirklich löschen? Dies kann nicht rückgängig gemacht werden.' }
+        end
+        para style: 'margin-top: 10px; color: #888; font-size: 12px;' do
+          "Dateiname: #{resource.photo_filename}"
+        end
+      end
+    end
     
     active_admin_comments
   end
@@ -256,6 +363,35 @@ ActiveAdmin.register Submission do
       hr
       para "Heute bestätigt: #{Submission.verified.where('verified_at > ?', Date.today.beginning_of_day).count}"
       para "Heute abgelehnt: #{Submission.denied.where('verified_at > ?', Date.today.beginning_of_day).count}"
+    end
+  end
+
+  # Sidebar with photo statistics
+  sidebar "Fotos", only: :index do
+    photos_count = Submission.joins(:photo_attachment).count
+    verified_photos = Submission.verified.joins(:photo_attachment).count
+    
+    div do
+      h4 "Foto-Übersicht"
+      para "Gesamt mit Foto: #{photos_count}"
+      para "Bestätigte mit Foto: #{verified_photos}"
+      hr
+      if verified_photos > 0
+        para do
+          link_to "⬇️ Alle bestätigten Fotos herunterladen", 
+                  download_all_photos_admin_submissions_path(submission_ids: Submission.verified.joins(:photo_attachment).pluck(:id)),
+                  class: 'button small',
+                  style: 'background-color: #5cb85c;'
+        end
+        para style: 'margin-top: 10px;' do
+          link_to "🗑️ Alle bestätigten Fotos löschen", 
+                  delete_all_photos_admin_submissions_path(submission_ids: Submission.verified.joins(:photo_attachment).pluck(:id)),
+                  method: :delete,
+                  class: 'button small',
+                  style: 'background-color: #d9534f;',
+                  data: { confirm: "Wirklich alle #{verified_photos} Fotos löschen? Dies kann nicht rückgängig gemacht werden!" }
+        end
+      end
     end
   end
 
