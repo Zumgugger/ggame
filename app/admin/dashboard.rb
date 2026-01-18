@@ -11,7 +11,7 @@ ActiveAdmin.register_page "Dashboard" do
     #   end
     # end
     panel "Control Room" do
-      link_to "Go to Control Room", main_path
+      link_to "Go to Control Room", admin_control_room_path
     end
 
     panel "File Upload" do

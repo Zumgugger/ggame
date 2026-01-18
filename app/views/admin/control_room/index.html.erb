@@ -3,8 +3,13 @@
   <div class="flex-between p-lg mb-xl">
     <div>
       <h1 class="flex gap-sm align-items-center">
-        <img src="/admin-icon.svg" alt="GGame Logo" style="width: 32px; height: 32px;">
-        Control Room
+        <div style="width: 40px; height: 40px; border-radius: 50%; background: #7c3aed; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.4rem; cursor: pointer; position: relative;" onclick="toggleLogoutMenu()">
+          <%= admin_avatar_letter %>
+          <div id="logout-menu" style="position: absolute; left: 0; top: 100%; margin-top: 6px; background: #fff; border: 1px solid #ddd; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); min-width: 140px; padding: 8px; display: none; z-index: 1001;">
+            <%= link_to "Logout", destroy_admin_user_session_path, method: :delete, data: { confirm: "Logout?" }, style: "display: block; color: #c00; text-decoration: none; font-weight: 600; padding: 8px;" %>
+          </div>
+        </div>
+        GGame Control Room
       </h1>
     </div>
     <div class="flex gap-md align-items-center">
@@ -38,7 +43,110 @@
     </div>
   </div>
 
-  <!-- Main Grid -->
+  <!-- JavaScript Functions (Must be before inline onclick handlers) -->
+  <script>
+    function openPhotoModal(src) {
+      document.getElementById('modal-photo').src = src;
+      document.getElementById('photo-modal').classList.remove('hidden');
+    }
+
+    function closePhotoModal() {
+      document.getElementById('photo-modal').classList.add('hidden');
+    }
+
+    function openEventModal(data) {
+      document.getElementById('event-time').textContent = data.time;
+      document.getElementById('event-group').textContent = data.group;
+      document.getElementById('event-option').textContent = data.option;
+      document.getElementById('event-target').textContent = data.target;
+      document.getElementById('event-description').textContent = data.description;
+      document.getElementById('event-group-points').textContent = data.group_points;
+      document.getElementById('event-target-group').textContent = data.target_group;
+      document.getElementById('event-target-points').textContent = data.target_points;
+      document.getElementById('event-modal').classList.remove('hidden');
+    }
+
+    function closeEventModal() {
+      document.getElementById('event-modal').classList.add('hidden');
+    }
+
+    function openGroupModal(data) {
+      document.getElementById('group-name').textContent = data.name;
+      document.getElementById('group-points').textContent = data.points;
+      document.getElementById('group-bounty').textContent = data.kopfgeld;
+      document.getElementById('group-members').textContent = data.members;
+      document.getElementById('group-false-info').textContent = data.false_info;
+      document.getElementById('group-submissions').textContent = data.submissions;
+      document.getElementById('group-modal').classList.remove('hidden');
+    }
+
+    function closeGroupModal() {
+      document.getElementById('group-modal').classList.add('hidden');
+    }
+
+    function toggleSensibleColumns() {
+      const toggle = document.getElementById('toggle-sensible');
+      if (!toggle) return;
+      const isChecked = toggle.checked;
+      const sensibleCols = document.querySelectorAll('.sensible-col');
+      sensibleCols.forEach(col => {
+        if (isChecked) {
+          col.classList.add('hidden');
+        } else {
+          col.classList.remove('hidden');
+        }
+      });
+    }
+
+    function toggleLogoutMenu() {
+      const menu = document.getElementById('logout-menu');
+      menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function toggleGroupTable() {
+      // Show overlay with expanded table
+      const overlay = document.getElementById('groups-overlay');
+      if (overlay) overlay.classList.remove('hidden');
+    }
+
+    function toggleEventsTable() {
+      // Show overlay with expanded table
+      const overlay = document.getElementById('events-overlay');
+      if (overlay) overlay.classList.remove('hidden');
+    }
+
+    // Close logout menu when clicking elsewhere
+    document.addEventListener('click', function(e) {
+      const menu = document.getElementById('logout-menu');
+      const avatar = e.target.closest('[onclick="toggleLogoutMenu()"]');
+      if (!avatar && menu) {
+        menu.style.display = 'none';
+      }
+    });
+
+    // Initialize: hide sensible columns on load
+    document.addEventListener('DOMContentLoaded', function() {
+      toggleSensibleColumns();
+    });
+
+    // Close menu when pressing Escape
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closePhotoModal();
+        document.getElementById('logout-menu').style.display = 'none';
+        closeGroupsOverlay();
+        closeEventsOverlay();
+      }
+    });
+    function closeGroupsOverlay() {
+      const overlay = document.getElementById('groups-overlay');
+      if (overlay) overlay.classList.add('hidden');
+    }
+    function closeEventsOverlay() {
+      const overlay = document.getElementById('events-overlay');
+      if (overlay) overlay.classList.add('hidden');
+    }
+  </script>
   <div class="admin-grid full">
     <!-- Central Approval Panel -->
     <div class="admin-section p-xl" id="approval-panel">
@@ -187,7 +295,7 @@
   <div class="admin-grid">
     <!-- Rankings -->
     <div class="admin-section">
-      <h2 class="mb-lg flex gap-sm align-items-center">
+      <h2 class="mb-lg flex gap-sm align-items-center" style="cursor: pointer;" onclick="toggleGroupTable()">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-accent">
           <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
           <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
@@ -198,13 +306,16 @@
         </svg>
         Group Rankings
       </h2>
-      <table>
+      <table id="groups-table" class="expandable-table">
         <thead>
           <tr>
-            <th>#</th>
-            <th>Group</th>
-            <th>Points</th>
+            <th>Rang</th>
+            <th>Gruppe</th>
+            <th>Punkte</th>
             <th>Submissions</th>
+            <th class="hidden-col">Kopfgeld</th>
+            <th class="hidden-col">Mitglieder</th>
+            <th class="hidden-col">Falschinformation</th>
           </tr>
         </thead>
         <tbody>
@@ -214,6 +325,9 @@
               <td><span class="text-accent" style="font-weight: bold;"><%= group.name %></span></td>
               <td><strong><%= group.points %></strong></td>
               <td><%= group.events.count %></td>
+              <td class="hidden-col"><%= group.kopfgeld %></td>
+              <td class="hidden-col"><%= group.player_sessions.count %></td>
+              <td class="hidden-col"><%= group.false_information ? "✓ ja!" : "nein" %></td>
             </tr>
           <% end %>
         </tbody>
@@ -222,7 +336,7 @@
 
     <!-- Recent Events -->
     <div class="admin-section">
-      <h2 class="mb-lg flex gap-sm align-items-center">
+      <h2 class="mb-lg flex gap-sm align-items-center" style="cursor: pointer;" onclick="toggleEventsTable()">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-accent">
           <line x1="12" y1="2" x2="12" y2="6"></line>
           <line x1="12" y1="18" x2="12" y2="22"></line>
@@ -235,22 +349,30 @@
         </svg>
         Recent Events
       </h2>
-      <table>
+      <table id="events-table" class="expandable-table">
         <thead>
           <tr>
-            <th>Time</th>
-            <th>Group</th>
-            <th>Action</th>
-            <th>Points</th>
+            <th>Zeit</th>
+            <th>Gruppe</th>
+            <th>Aktion</th>
+            <th>Gruppenpunkte</th>
+            <th class="hidden-col">Ziel</th>
+            <th class="hidden-col">Beschrieb</th>
+            <th class="hidden-col">Zielgruppe</th>
+            <th class="hidden-col">Zielpunkte</th>
           </tr>
         </thead>
         <tbody>
           <% @recent_events.each do |event| %>
             <tr style="cursor: pointer;" onclick="window.location='<%= event_path(event) %>'">
-              <td class="text-muted"><%= event.created_at.strftime("%H:%M") %></td>
+              <td class="text-muted"><%= event.created_at.strftime("%H:%M:%S") %></td>
               <td><strong><%= event.group.name %></strong></td>
               <td><%= event.option.name %></td>
               <td class="text-accent"><strong><%= event.group_points %></strong></td>
+              <td class="hidden-col"><%= event.target&.name || "-" %></td>
+              <td class="hidden-col"><%= event.description %></td>
+              <td class="hidden-col"><%= event.target_group&.name || "-" %></td>
+              <td class="hidden-col"><%= event.target_points.present? ? event.target_points : "-" %></td>
             </tr>
           <% end %>
         </tbody>
@@ -264,6 +386,79 @@
   <div class="photo-modal-content" onclick="event.stopPropagation();">
     <button class="btn-close" onclick="closePhotoModal()">✕</button>
     <img id="modal-photo" src="" alt="Full size photo" style="width: 100%; height: auto;">
+  </div>
+</div>
+
+<!-- Expanded Overlays -->
+<div id="groups-overlay" class="overlay hidden" onclick="closeGroupsOverlay()">
+  <div class="overlay-content admin-section" onclick="event.stopPropagation();">
+    <button class="btn-close" onclick="closeGroupsOverlay()">✕</button>
+    <h2 class="mb-lg flex gap-sm align-items-center">
+      Group Rankings
+    </h2>
+    <table class="expandable-table expanded">
+      <thead>
+        <tr>
+          <th>Rang</th>
+          <th>Gruppe</th>
+          <th>Punkte</th>
+          <th>Submissions</th>
+          <th>Kopfgeld</th>
+          <th>Mitglieder</th>
+          <th>Falschinformation</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @groups.each_with_index do |group, idx| %>
+          <tr style="cursor: pointer;" onclick="window.location='<%= admin_group_path(group) %>'">
+            <td><span class="badge"><%= idx + 1 %></span></td>
+            <td><span class="text-accent" style="font-weight: bold;"><%= group.name %></span></td>
+            <td><strong><%= group.points %></strong></td>
+            <td><%= group.events.count %></td>
+            <td><%= group.kopfgeld %></td>
+            <td><%= group.player_sessions.count %></td>
+            <td><%= group.false_information ? "✓ ja!" : "nein" %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div id="events-overlay" class="overlay hidden" onclick="closeEventsOverlay()">
+  <div class="overlay-content admin-section" onclick="event.stopPropagation();">
+    <button class="btn-close" onclick="closeEventsOverlay()">✕</button>
+    <h2 class="mb-lg flex gap-sm align-items-center">
+      Recent Events
+    </h2>
+    <table class="expandable-table expanded">
+      <thead>
+        <tr>
+          <th>Zeit</th>
+          <th>Gruppe</th>
+          <th>Aktion</th>
+          <th>Gruppenpunkte</th>
+          <th>Ziel</th>
+          <th>Beschrieb</th>
+          <th>Zielgruppe</th>
+          <th>Zielpunkte</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @recent_events.each do |event| %>
+          <tr style="cursor: pointer;" onclick="window.location='<%= event_path(event) %>'">
+            <td class="text-muted"><%= event.created_at.strftime("%H:%M:%S") %></td>
+            <td><strong><%= event.group.name %></strong></td>
+            <td><%= event.option.name %></td>
+            <td class="text-accent"><strong><%= event.group_points %></strong></td>
+            <td><%= event.target&.name || "-" %></td>
+            <td><%= event.description %></td>
+            <td><%= event.target_group&.name || "-" %></td>
+            <td><%= event.target_points.present? ? event.target_points : "-" %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
   </div>
 </div>
 
@@ -291,17 +486,85 @@
     max-height: 90vh;
   }
 
+  .modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+
+  .modal.hidden {
+    display: none;
+  }
+
+  .modal-content {
+    position: relative;
+    background: white;
+    border-radius: 8px;
+    padding: 30px;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  }
+
+  .modal-body {
+    margin-top: 20px;
+  }
+
+  .detail-row {
+    display: flex;
+    margin-bottom: 15px;
+    gap: 15px;
+    align-items: baseline;
+  }
+
+  .detail-label {
+    font-weight: 600;
+    min-width: 150px;
+    color: #666;
+  }
+
+  .detail-value {
+    flex: 1;
+    word-break: break-word;
+  }
+
   .btn-close {
     position: absolute;
-    top: -40px;
-    right: 0;
+    top: 15px;
+    right: 15px;
     background: transparent;
-    border: 2px solid white;
-    color: white;
+    border: 2px solid #ddd;
+    color: #333;
     width: 40px;
     height: 40px;
     font-size: 1.5rem;
     cursor: pointer;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .btn-close:hover {
+    background: #f0f0f0;
+    border-color: #999;
+  }
+
+  .sensible-col {
+    opacity: 1;
+    transition: opacity 0.3s ease;
+  }
+
+  .sensible-col.hidden {
+    display: none;
   }
 
   .align-items-center {
@@ -314,5 +577,67 @@
 
   .text-small {
     font-size: var(--font-size-small);
+  }
+
+  .flex-between {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* Expandable Table Styles */
+  .hidden-col {
+    display: none !important;
+  }
+
+  #groups-table.expanded .hidden-col,
+  #events-table.expanded .hidden-col {
+    display: table-cell !important;
+  }
+
+  /* Hide headers by default, show when expanded */
+  #groups-table thead,
+  #events-table thead {
+    display: none;
+  }
+  #groups-table.expanded thead,
+  #events-table.expanded thead {
+    display: table-header-group;
+  }
+
+  h2[onclick*="toggle"]:hover {
+    opacity: 0.7;
+    transition: opacity 0.2s;
+  }
+
+  /* Overlay styles */
+  .overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+  .overlay:not(.hidden) {
+    display: flex;
+  }
+  .overlay-content {
+    position: relative;
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow: auto;
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-md);
+    background: var(--color-bg);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  }
+  .btn-close {
+    position: absolute;
+    top: var(--spacing-sm);
+    right: var(--spacing-sm);
   }
 </style>
