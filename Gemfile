@@ -73,6 +73,9 @@ gem "prawn", "~> 2.4.0"
 # added for ZIP file creation (bulk photo downloads)
 gem "rubyzip", "~> 2.3.0"
 
+# Security hardening
+gem "rack-attack", "~> 6.7"
+
 
 
 

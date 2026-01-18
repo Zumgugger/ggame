@@ -1,8 +1,8 @@
 # GGame Feature Implementation Plan
 
 > **Document Created:** January 17, 2026  
-> **Last Updated:** January 17, 2026
-> **Status:** Phase 1-8 Complete, Phase 9 Next  
+> **Last Updated:** January 18, 2026
+> **Status:** Phase 1-9 Complete, Phase 10 Next  
 > **Estimated Total Effort:** 4-6 weeks
 
 ---
@@ -825,15 +825,78 @@ end
   - Better typography and spacing
 - ✅ Rules auto-update when OptionSettings change (database-driven)
 
-### Next Steps (Phase 9: Security Hardening):
-1. Rate limiting middleware (1 req/10s per session)
-2. Input sanitization for all player inputs
-3. CSRF protection for API endpoints
-4. Session token validation
-5. Prevent group hopping (one device = one group)
-6. SQL injection prevention audit
-7. XSS prevention audit
+### Completed in Phase 9:
+- ✅ Rate limiting middleware (1 req/10s per session) - rack-attack gem configured
+  - Throttled submissions to 1 request per 10 seconds per session token
+  - Throttled general player API calls to 5 req/10s per IP
+  - General endpoints throttled to 100 req/min per IP
+  - Custom 429 rate limit response with Retry-After header
+  - Localhost whitelisted for development
+- ✅ Input sanitization for all player inputs
+  - `SecurityHelper` module with sanitization methods
+  - Player name sanitization (HTML stripping, length limit 50 chars, no special chars)
+  - Submission description sanitization (500 char limit)
+  - Admin message sanitization (allows safe HTML: bold, italic, links)
+  - Photo upload validation (MIME type check, 10MB size limit)
+  - Control character removal from all inputs
+- ✅ CSRF protection for API endpoints
+  - `csrf_protection.rb` initializer configured
+  - Rack::CsrfProtection middleware enabled
+  - Secure cookie flags set (httpOnly, same_site: :lax)
+  - CSRF token validation on all state-changing requests
+- ✅ Session token validation
+  - `SessionSecurity` module for cryptographic token management
+  - 64-character hex tokens (SecureRandom.hex(32))
+  - Token format validation (regex check for hex format)
+  - Session expiration after 30 days of inactivity
+  - Device fingerprint validation to detect token theft
+  - IP change detection and logging for security monitoring
+- ✅ Prevent group hopping (one device = one group)
+  - `locked_to_group` boolean flag on PlayerSession
+  - `initial_group_id` tracks first group assignment
+  - `join_group!` method prevents switching groups after first join
+  - Failed join attempt tracking with automatic blocking after 3 attempts
+  - `blocked_until` timestamp for temporary session blocks (1 hour)
+  - `blocked?` and `group_locked?` helper methods
+  - Admin `unblock!` function to reset blocked sessions
+- ✅ SQL injection prevention audit
+  - All queries use parameterized ActiveRecord methods (no string interpolation)
+  - All user inputs validated and sanitized before database operations
+  - Foreign keys enforce referential integrity
+- ✅ XSS prevention audit
+  - `ERB::Util.html_escape()` used for user-generated content display
+  - ActionController Base helpers for safe tag stripping
+  - All views properly escape variables with <%= %>
+  - No raw HTML rendering from user input
+
+### Database Migration:
+- ✅ `add_security_columns_to_player_sessions` migration created
+  - Adds: `locked_to_group`, `initial_group_id`, `last_ip`, `failed_join_attempts`, `blocked_until`
+  - Proper foreign key for `initial_group_id`
+  - Comments documenting security purpose of each column
+
+### New Files Created:
+- ✅ `config/initializers/rack_attack.rb` - Rate limiting configuration
+- ✅ `app/helpers/security_helper.rb` - Input sanitization helper methods
+- ✅ `config/initializers/csrf_protection.rb` - CSRF middleware configuration
+- ✅ `lib/session_security.rb` - Session token validation module
+- ✅ `db/migrate/20260118115306_add_security_columns_to_player_sessions.rb` - Security columns
+
+### Model Updates:
+- ✅ Updated `PlayerSession` model with security methods:
+  - Group locking enforcement
+  - Failed attempt tracking and automatic blocking
+  - Token generation (SecureRandom.hex(32))
+  - Session state checking
+
+### Gemfile Updates:
+- ✅ Added `gem "rack-attack", "~> 6.7"` for rate limiting
 
 ---
 
-*End of Feature Plan*
+### Next Steps (Phase 10: Admin Design Improvements):
+1. Design mockups/wireframes for admin UI
+2. Custom ActiveAdmin theme or custom views
+3. Mobile-responsive admin interface
+4. Improved verification workflow UX
+5. Dashboard with live game stats
