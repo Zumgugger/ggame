@@ -274,7 +274,15 @@ class Submission < ApplicationRecord
   def cooldown_respected
     return unless option && group
 
-    checker = CooldownChecker.new(group, option, target)
+    # For options that require target_group (like "hat Gruppe fotografiert"), pass target_group
+    # For options that require target (like "hat Posten geholt"), pass target
+    target_for_cooldown = if option.requires_target_group?
+                             target_group
+                           else
+                             target
+                           end
+
+    checker = CooldownChecker.new(group, option, target_for_cooldown)
     result = checker.check
     unless result[:allowed]
       errors.add(:base, result[:reason] || "Cooldown aktiv.")

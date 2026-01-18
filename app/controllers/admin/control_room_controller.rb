@@ -1,6 +1,8 @@
 class Admin::ControlRoomController < ApplicationController
   before_action :authenticate_admin_user!
   layout 'admin'
+
+  rescue_from ActionController::ParameterMissing, with: :render_param_error
   
   def index
     # Get earliest pending submission
@@ -27,6 +29,9 @@ class Admin::ControlRoomController < ApplicationController
     @recent_events = Event.includes(:group, :option)
                            .order(created_at: :desc)
                            .limit(10)
+
+    # Calculate next break/game end time
+    @next_end_time = calculate_next_end_time
   end
 
   def verify_submission
@@ -63,6 +68,29 @@ class Admin::ControlRoomController < ApplicationController
   private
 
   def submission_params
-    params.require(:submission).permit(:admin_message)
+    params.permit(:admin_message)
+  end
+
+  # Calculate the next break or game end time
+  def calculate_next_end_time
+    game_setting = GameSetting.instance
+    now = Time.current
+
+    # If game has time windows, find the next one that ends after now
+    if game_setting.game_time_windows.any?
+      upcoming_window = game_setting.game_time_windows
+                                    .where('end_time > ?', now)
+                                    .order(:start_time)
+                                    .first
+
+      return upcoming_window&.end_time
+    end
+
+    # Fall back to game_end_time
+    game_setting.game_end_time
+  end
+
+  def render_param_error(exception)
+    render json: { success: false, message: exception.message }, status: :bad_request
   end
 end

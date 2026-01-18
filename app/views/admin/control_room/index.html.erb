@@ -24,9 +24,16 @@
         </div>
       </div>
       <% if Time.now < DateTime.parse("2099-01-01 23:59:59") %>
-        <div id="game-timer" class="text-accent" style="font-weight: bold;">
-          ⏱️ Game ends in <span id="timer-value">--:--</span>
-        </div>
+        <a href="<%= admin_game_setting_path(GameSetting.instance) %>" style="text-decoration: none; cursor: pointer;">
+          <div id="game-timer" class="text-accent" style="font-weight: bold;">
+            ⏱️ Time till next break: <span id="timer-value">--:--:--</span>
+          </div>
+        </a>
+        <% if @next_end_time.present? %>
+          <script>
+            window.nextEndTime = new Date('<%= @next_end_time.to_s %>').getTime();
+          </script>
+        <% end %>
       <% end %>
     </div>
   </div>

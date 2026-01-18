@@ -208,13 +208,27 @@ function updateGameTimer() {
   const timerElement = document.getElementById('timer-value');
   if (!timerElement) return;
 
-  // This would be set by the server; for now, placeholder
-  // In real implementation, calculate from game_end_time
-  
-  // Example: update every second
+  // Check if nextEndTime was set in the view
+  if (typeof window.nextEndTime === 'undefined') return;
+
+  // Update timer every second
   setInterval(() => {
-    // Calculate remaining time
-    // This needs to be implemented based on your GameSettings model
+    const now = new Date().getTime();
+    const timeLeft = window.nextEndTime - now;
+
+    if (timeLeft <= 0) {
+      timerElement.textContent = '00:00:00';
+      return;
+    }
+
+    const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+    timerElement.textContent = 
+      String(hours).padStart(2, '0') + ':' +
+      String(minutes).padStart(2, '0') + ':' +
+      String(seconds).padStart(2, '0');
   }, 1000);
 }
 

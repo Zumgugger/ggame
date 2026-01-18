@@ -361,14 +361,20 @@ document.addEventListener('DOMContentLoaded', function() {
     photoWarning.style.display = 'block';
   }
 
-  // Option change handler
-  optionSelect.addEventListener('change', function() {
-    const selected = this.options[this.selectedIndex];
-    const requiresTargetGroup = selected.dataset.requiresTargetGroup === 'true';
-    const requiresPosten = selected.dataset.requiresPosten === 'true';
-    const requiresPointsInput = selected.dataset.requiresPointsInput === 'true';
-    const requiresPhoto = selected.dataset.requiresPhoto === 'true';
-    const optionName = selected.text.trim();
+  function getOptionRequirements() {
+    const selected = optionSelect.options[optionSelect.selectedIndex];
+    return {
+      requiresTargetGroup: selected?.dataset.requiresTargetGroup === 'true',
+      requiresPosten: selected?.dataset.requiresPosten === 'true',
+      requiresPointsInput: selected?.dataset.requiresPointsInput === 'true',
+      requiresPhoto: selected?.dataset.requiresPhoto === 'true',
+      optionName: selected ? selected.text.trim() : ''
+    };
+  }
+
+  // Option change handler keeps dependent fields in sync
+  function updateOptionFields() {
+    const { requiresTargetGroup, requiresPosten, requiresPointsInput, requiresPhoto, optionName } = getOptionRequirements();
 
     // Show/hide target group selection (for "hat Gruppe fotografiert", etc.)
     targetGroupDiv.style.display = requiresTargetGroup ? 'block' : 'none';
@@ -428,7 +434,10 @@ document.addEventListener('DOMContentLoaded', function() {
       photoHint.classList.remove('required');
       photoInput.required = false;
     }
-  });
+  }
+
+  optionSelect.addEventListener('change', updateOptionFields);
+  updateOptionFields();
 
   // Check if this submission is a duplicate
   function checkDuplicate() {
@@ -647,6 +656,39 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
     }
+
+    // Client-side required checks so we never send incomplete payloads
+    const { requiresTargetGroup, requiresPosten, requiresPointsInput, requiresPhoto } = getOptionRequirements();
+    if (!optionSelect.value) {
+      statusMessage.textContent = '❌ Bitte eine Aktion auswählen';
+      statusMessage.className = 'status-message error';
+      statusMessage.style.display = 'block';
+      return;
+    }
+    if (requiresTargetGroup && !targetGroupSelect.value) {
+      statusMessage.textContent = '❌ Bitte eine Zielgruppe auswählen';
+      statusMessage.className = 'status-message error';
+      statusMessage.style.display = 'block';
+      return;
+    }
+    if (requiresPosten && !postenSelect.value) {
+      statusMessage.textContent = '❌ Bitte einen Posten auswählen';
+      statusMessage.className = 'status-message error';
+      statusMessage.style.display = 'block';
+      return;
+    }
+    if (requiresPointsInput && !pointsInput.value) {
+      statusMessage.textContent = '❌ Bitte Punkte eintragen';
+      statusMessage.className = 'status-message error';
+      statusMessage.style.display = 'block';
+      return;
+    }
+    if (requiresPhoto && !(photoInput.files && photoInput.files.length)) {
+      statusMessage.textContent = '❌ Foto erforderlich für diese Aktion';
+      statusMessage.className = 'status-message error';
+      statusMessage.style.display = 'block';
+      return;
+    }
     
     // Check for duplicate submission and ask for confirmation
     const duplicate = checkDuplicate();
@@ -675,6 +717,12 @@ document.addEventListener('DOMContentLoaded', function() {
     statusMessage.style.display = 'none';
 
     const formData = new FormData(form);
+    
+    // Debug: log what's being sent
+    console.log('Form submission data:');
+    for (let [key, value] of formData.entries()) {
+      console.log(`  ${key}: ${value}`);
+    }
 
     try {
       const response = await fetch('<%= play_create_submission_path %>', {

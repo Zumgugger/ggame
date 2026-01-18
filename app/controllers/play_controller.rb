@@ -126,13 +126,23 @@ class PlayController < ApplicationController
       return
     end
 
+    # Parse incoming params and convert IDs to integers
+    target_id = params[:target_id].presence
+    target_group_id = params[:target_group_id].presence
+    points_set = params[:points_set].presence
+
+    # Convert string IDs to integers if present
+    target_id = target_id&.to_i
+    target_group_id = target_group_id&.to_i
+    points_set = points_set&.to_i
+
     @submission = Submission.new(
       group: @session.group,
       player_session: @session,
       option_id: params[:option_id],
-      target_id: params[:target_id].presence,           # Posten (Target)
-      target_group_id: params[:target_group_id].presence, # Target Group
-      points_set: params[:points_set].presence,         # Points for Mine/Kopfgeld
+      target_id: target_id,
+      target_group_id: target_group_id,
+      points_set: points_set,
       description: params[:description]
     )
 
@@ -148,6 +158,9 @@ class PlayController < ApplicationController
         submission_id: @submission.id
       }
     else
+      Rails.logger.error("Submission validation failed: #{@submission.errors.full_messages.inspect}")
+      Rails.logger.error("  option_id=#{@submission.option_id}, target_group_id=#{@submission.target_group_id}, target_id=#{@submission.target_id}")
+      Rails.logger.error("  requires_target_group?=#{@submission.requires_target_group?}, target_group=#{@submission.target_group.inspect}")
       render json: {
         success: false,
         message: @submission.errors.full_messages.join(', ')
