@@ -1,0 +1,257 @@
+<div class="admin-container">
+  <!-- Header -->
+  <div class="flex-between p-lg mb-xl">
+    <div>
+      <h1>⚔️ Control Room</h1>
+    </div>
+    <div class="flex gap-md align-items-center">
+      <div class="flex gap-sm align-items-center">
+        <span class="indicator-live"></span>
+        <span class="text-muted">Live</span>
+      </div>
+      <div id="queue-stats" class="flex gap-lg">
+        <div>
+          <span class="text-accent"><%= @pending_count %></span> <span class="text-muted">pending</span>
+        </div>
+        <div>
+          <span class="text-accent"><%= @verified_today %></span> <span class="text-muted">approved today</span>
+        </div>
+        <div>
+          <span class="text-accent"><%= @denied_today %></span> <span class="text-muted">denied today</span>
+        </div>
+      </div>
+      <% if Time.now < DateTime.parse("2099-01-01 23:59:59") %>
+        <div id="game-timer" class="text-accent" style="font-weight: bold;">
+          ⏱️ Game ends in <span id="timer-value">--:--</span>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Main Grid -->
+  <div class="admin-grid full">
+    <!-- Central Approval Panel -->
+    <div class="admin-section p-xl" id="approval-panel">
+      <% if @submission_to_verify.present? %>
+        <div id="submission-<%= @submission_to_verify.id %>" class="submission-card">
+          <div class="flex-between mb-lg">
+            <h2>📋 Next Submission</h2>
+            <span class="badge"><%= time_ago_in_words(@submission_to_verify.created_at) %> ago</span>
+          </div>
+
+          <!-- Submission Info -->
+          <div class="flex-between gap-xl mb-xl">
+            <div class="flex-column gap-md" style="flex: 1;">
+              <div>
+                <span class="text-muted">Group:</span>
+                <span class="text-accent" style="font-weight: bold; font-size: 1.2rem;">
+                  <%= @submission_to_verify.group.name %>
+                </span>
+              </div>
+              <div>
+                <span class="text-muted">Option:</span>
+                <span><%= @submission_to_verify.option.name %></span>
+              </div>
+              <% if @submission_to_verify.target.present? %>
+                <div>
+                  <span class="text-muted">Target/Posten:</span>
+                  <span><%= @submission_to_verify.target.name %></span>
+                </div>
+              <% end %>
+              <% if @submission_to_verify.target_group.present? %>
+                <div>
+                  <span class="text-muted">Target Group:</span>
+                  <span><%= @submission_to_verify.target_group.name %></span>
+                </div>
+              <% end %>
+              <div>
+                <span class="text-muted">Description:</span>
+                <span><%= @submission_to_verify.description.truncate(100) %></span>
+              </div>
+            </div>
+
+            <!-- Photo -->
+            <% if @submission_to_verify.photo.attached? %>
+              <div class="photo-container" style="flex: 0 0 300px;">
+                <img id="submission-photo" 
+                     src="<%= url_for(@submission_to_verify.photo) %>" 
+                     alt="Submission photo"
+                     style="width: 100%; aspect-ratio: 3/4; object-fit: cover; cursor: pointer; border: 2px solid var(--color-accent-primary);"
+                     onclick="openPhotoModal(this.src)"
+                >
+                <p class="text-center text-muted text-small mt-sm">Click to expand</p>
+              </div>
+            <% end %>
+          </div>
+
+          <!-- Verification Form -->
+          <form id="verification-form" data-submission-id="<%= @submission_to_verify.id %>">
+            <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+            
+            <div class="form-group">
+              <label for="admin_message">Custom Message to Group:</label>
+              <textarea id="admin_message" 
+                        name="admin_message" 
+                        placeholder="Optional: Send a message back to the group..."
+                        style="height: 80px;"></textarea>
+            </div>
+
+            <div class="flex gap-lg">
+              <button type="button" 
+                      class="btn btn-success" 
+                      onclick="submitVerification('<%= @submission_to_verify.id %>', 'verified')"
+                      style="flex: 1; padding: var(--spacing-md);">
+                ✓ APPROVE
+                <br>
+                <span class="text-small">(or press A)</span>
+              </button>
+              <button type="button" 
+                      class="btn btn-danger" 
+                      onclick="submitVerification('<%= @submission_to_verify.id %>', 'denied')"
+                      style="flex: 1; padding: var(--spacing-md);">
+                ✗ DENY
+                <br>
+                <span class="text-small">(or press D)</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      <% else %>
+        <!-- Empty Queue State -->
+        <div class="flex-center flex-column gap-lg p-2xl text-center">
+          <h2>✨ Queue is empty!</h2>
+          <p class="text-muted">Showing most recent event...</p>
+          
+          <% if @last_event.present? %>
+            <div class="admin-section p-lg" style="width: 100%; margin-top: var(--spacing-lg);">
+              <h3><%= @last_event.group.name %> - <%= @last_event.option.name %></h3>
+              <p class="text-muted"><%= time_ago_in_words(@last_event.created_at) %> ago</p>
+              <p><%= @last_event.description %></p>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Bottom Navigation / Quick Actions -->
+    <div class="flex gap-md mb-xl justify-content-center">
+      <%= link_to '+ Add Event Manually', new_event_path, class: 'btn btn-warning p-md' %>
+      <%= link_to '⚙️ Admin Settings', admin_path, class: 'btn p-md' %>
+      <%= link_to '📜 Rules Editor', admin_rules_editor_path, class: 'btn p-md' %>
+      <button type="button" class="btn btn-warning p-md" onclick="undoLastAction()" id="undo-btn" style="display: none;">
+        ↶ UNDO
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats & Rankings Section -->
+  <div class="admin-grid">
+    <!-- Rankings -->
+    <div class="admin-section">
+      <h2 class="mb-lg">🏆 Group Rankings</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Group</th>
+            <th>Points</th>
+            <th>Submissions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @groups.each_with_index do |group, idx| %>
+            <tr>
+              <td><span class="badge"><%= idx + 1 %></span></td>
+              <td><span class="text-accent" style="font-weight: bold;"><%= group.name %></span></td>
+              <td><strong><%= group.points %></strong></td>
+              <td><%= group.events.count %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Recent Events -->
+    <div class="admin-section">
+      <h2 class="mb-lg">📊 Recent Events</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Group</th>
+            <th>Action</th>
+            <th>Points</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @recent_events.each do |event| %>
+            <tr>
+              <td class="text-muted"><%= event.created_at.strftime("%H:%M") %></td>
+              <td><strong><%= event.group.name %></strong></td>
+              <td><%= event.option.name %></td>
+              <td class="text-accent"><strong><%= event.group_points %></strong></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Photo Modal -->
+<div id="photo-modal" class="photo-modal hidden" onclick="closePhotoModal()">
+  <div class="photo-modal-content" onclick="event.stopPropagation();">
+    <button class="btn-close" onclick="closePhotoModal()">✕</button>
+    <img id="modal-photo" src="" alt="Full size photo" style="width: 100%; height: auto;">
+  </div>
+</div>
+
+<style>
+  .photo-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+
+  .photo-modal.hidden {
+    display: none;
+  }
+
+  .photo-modal-content {
+    position: relative;
+    max-width: 90vw;
+    max-height: 90vh;
+  }
+
+  .btn-close {
+    position: absolute;
+    top: -40px;
+    right: 0;
+    background: transparent;
+    border: 2px solid white;
+    color: white;
+    width: 40px;
+    height: 40px;
+    font-size: 1.5rem;
+    cursor: pointer;
+  }
+
+  .align-items-center {
+    align-items: center;
+  }
+
+  .justify-content-center {
+    justify-content: center;
+  }
+
+  .text-small {
+    font-size: var(--font-size-small);
+  }
+</style>

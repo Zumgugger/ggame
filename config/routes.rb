@@ -5,6 +5,16 @@ Rails.application.routes.draw do
     end
 
   devise_for :admin_users, ActiveAdmin::Devise.config
+  
+  # Admin control room routes
+  namespace :admin do
+    get 'control_room', to: 'control_room#index', as: 'control_room'
+    patch 'submissions/:id/verified', to: 'control_room#verify_submission'
+    patch 'submissions/:id/denied', to: 'control_room#deny_submission'
+    patch 'submissions/:id/unverify', to: 'control_room#undo_submission'
+    patch 'submissions/:id/deny_undo', to: 'control_room#undo_submission'
+  end
+  
   ActiveAdmin.routes(self)
   devise_for :users
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
