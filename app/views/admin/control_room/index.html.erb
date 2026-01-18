@@ -136,8 +136,8 @@
     <!-- Bottom Navigation / Quick Actions -->
     <div class="flex gap-md mb-xl justify-content-center">
       <%= link_to '+ Add Event Manually', new_event_path, class: 'btn btn-warning p-md' %>
-      <%= link_to '⚙️ Admin Settings', admin_path, class: 'btn p-md' %>
-      <%= link_to '📜 Rules Editor', admin_rules_editor_path, class: 'btn p-md' %>
+      <%= link_to '⚙️ Admin Settings', admin_root_path, class: 'btn p-md' %>
+      <%= link_to '📜 Rules Editor', admin_option_settings_path, class: 'btn p-md' %>
       <button type="button" class="btn btn-warning p-md" onclick="undoLastAction()" id="undo-btn" style="display: none;">
         ↶ UNDO
       </button>
