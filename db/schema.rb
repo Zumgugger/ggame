@@ -210,10 +210,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_01_17_133619) do
     t.datetime "reset_password_sent_at"
     t.datetime "remember_created_at"
     t.string "phone_number"
-    t.bigint "group_id"
     t.string "name"
     t.index ["email"], name: "index_users_on_email", unique: true
-    t.index ["group_id"], name: "index_users_on_group_id"
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
@@ -229,5 +227,4 @@ ActiveRecord::Schema[7.2].define(version: 2026_01_17_133619) do
   add_foreign_key "submissions", "player_sessions"
   add_foreign_key "submissions", "submissions", column: "queued_behind_id", on_delete: :nullify
   add_foreign_key "submissions", "targets"
-  add_foreign_key "users", "groups"
 end

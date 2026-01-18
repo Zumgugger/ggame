@@ -233,9 +233,6 @@ ActiveAdmin.setup do |config|
   # To load a javascript file:
   #   config.register_javascript 'my_javascript.js'
 
-  # Register QRCode.js for QR code generation
-  config.register_javascript 'https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js'
-
   # == CSV options
   #
   # Set the CSV builder separator
